@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Tailwind CSS v4 暗色模式配置 - 使用类选择器而非媒体查询 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Tailwind CSS v4 主题配置 - Cursor 官网风格 */
 @theme {
   /* 主色调 - 黑白灰系（Cursor 风格） */
