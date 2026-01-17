@@ -1,0 +1,149 @@
+@import 'tailwindcss';
+
+/* Tailwind CSS v4 主题配置 - Cursor 官网风格 */
+@theme {
+  /* 主色调 - 黑白灰系（Cursor 风格） */
+  --color-primary-50: #fafafa;
+  --color-primary-100: #f4f4f5;
+  --color-primary-200: #e4e4e7;
+  --color-primary-300: #d4d4d8;
+  --color-primary-400: #a1a1aa;
+  --color-primary-500: #71717a;
+  --color-primary-600: #52525b;
+  --color-primary-700: #3f3f46;
+  --color-primary-800: #27272a;
+  --color-primary-900: #18181b;
+  --color-primary: #18181b;
+  --color-primary-dark: #09090b;
+
+  /* 暗色主题背景 */
+  --color-dark-bg-start: #0a0a0a;
+  --color-dark-bg-end: #171717;
+
+  /* 亮色主题背景 - 米白色 */
+  --color-light-bg-start: #fafaf9;
+  --color-light-bg-end: #f5f5f4;
+}
+
+/* 基础样式 */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body {
+  @apply antialiased;
+}
+
+/* 亮色主题（默认）- Cursor 风格米白背景 */
+:root {
+  --bg-gradient: linear-gradient(to bottom, var(--color-light-bg-start), var(--color-light-bg-end));
+  --text-primary: #18181b;
+  --text-secondary: #71717a;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --card-border: rgba(0, 0, 0, 0.08);
+}
+
+/* 暗色主题 - Cursor 风格深灰背景 */
+.dark {
+  --bg-gradient: linear-gradient(to bottom, var(--color-dark-bg-start), var(--color-dark-bg-end));
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --card-bg: rgba(38, 38, 38, 0.8);
+  --card-border: rgba(255, 255, 255, 0.08);
+}
+
+/* 应用背景渐变 */
+#app {
+  min-height: 100vh;
+  background: var(--bg-gradient);
+  color: var(--text-primary);
+}
+
+/* 确保文字颜色在亮色模式下可见 */
+.text-zinc-900 {
+  color: #18181b !important;
+}
+
+.dark .text-zinc-900 {
+  color: #18181b !important;
+}
+
+.dark .dark\:text-white {
+  color: #ffffff !important;
+}
+
+/* 毛玻璃卡片样式 */
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  border-radius: 0.5rem;
+}
+
+/* 强调文字 - Cursor 风格 */
+.gradient-text {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* 主按钮 - Cursor 风格 */
+.btn-primary {
+  @apply px-6 py-2.5 rounded-lg font-medium transition-all duration-200;
+  background: #18181b;
+  color: #ffffff;
+  border: 1px solid transparent;
+}
+
+.btn-primary:hover {
+  background: #27272a;
+}
+
+/* 暗色模式下的主按钮 */
+.dark .btn-primary {
+  background: #fafafa;
+  color: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .btn-primary:hover {
+  background: #e4e4e7;
+}
+
+/* 输入框样式 - Cursor 风格 */
+.input-field {
+  @apply w-full px-3 py-2 rounded-md transition-all duration-200 sm:px-4 sm:py-2.5;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+}
+
+.input-field:focus {
+  @apply outline-none ring-2;
+  ring-color: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.dark .input-field:focus {
+  ring-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
