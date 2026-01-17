@@ -6,7 +6,7 @@ import ThemeToggle from './ThemeToggle.vue'
 const route = useRoute()
 
 const navItems = [
-  { path: '/', label: '首页', icon: TrendingUp },
+  // { path: '/', label: '首页', icon: TrendingUp },
   { path: '/simulator', label: '模拟器', icon: BarChart3 },
 ]
 </script>
