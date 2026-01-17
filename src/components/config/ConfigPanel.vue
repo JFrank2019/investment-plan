@@ -50,7 +50,7 @@ function updateRebalanceRatio(value: number) {
               type="number"
               :value="store.params.initialCapital"
               @change="store.updateParams({ initialCapital: Number(($event.target as HTMLInputElement).value) || 0 })"
-              class="input-field pr-10 text-sm sm:pr-12"
+              class="money-text input-field pr-10 text-sm sm:pr-12"
               min="0"
               step="10000"
             />
@@ -60,7 +60,7 @@ function updateRebalanceRatio(value: number) {
               元
             </span>
           </div>
-          <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+          <p class="money-text mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
             {{ formatMoney(store.params.initialCapital) }}
           </p>
         </div>
@@ -106,7 +106,7 @@ function updateRebalanceRatio(value: number) {
               type="number"
               :value="store.params.weeklyInvestment"
               @change="store.updateParams({ weeklyInvestment: Number(($event.target as HTMLInputElement).value) || 0 })"
-              class="input-field pr-12 text-sm"
+              class="money-text input-field pr-12 text-sm"
               min="0"
               step="100"
             />
@@ -116,7 +116,7 @@ function updateRebalanceRatio(value: number) {
               元/周
             </span>
           </div>
-          <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+          <p class="money-text mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
             约 {{ formatMoney(monthlyInvestment) }}/月
           </p>
         </div>
@@ -340,19 +340,19 @@ function updateRebalanceRatio(value: number) {
       <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
         <div class="rounded-md bg-zinc-50 p-3 sm:p-4 dark:bg-white/5">
           <p class="text-xs text-zinc-500 sm:text-sm dark:text-zinc-400">初始本金</p>
-          <p class="mt-0.5 text-base font-semibold text-zinc-900 sm:mt-1 sm:text-xl dark:text-white">
+          <p class="money-text mt-0.5 text-base font-semibold text-zinc-900 sm:mt-1 sm:text-xl dark:text-white">
             {{ formatMoney(store.params.initialCapital) }}
           </p>
         </div>
         <div class="rounded-md bg-zinc-50 p-3 sm:p-4 dark:bg-white/5">
           <p class="text-xs text-zinc-500 sm:text-sm dark:text-zinc-400">定投总额</p>
-          <p class="mt-0.5 text-base font-semibold text-zinc-900 sm:mt-1 sm:text-xl dark:text-white">
+          <p class="money-text mt-0.5 text-base font-semibold text-zinc-900 sm:mt-1 sm:text-xl dark:text-white">
             {{ formatMoney(totalInvestment - store.params.initialCapital) }}
           </p>
         </div>
         <div class="rounded-md bg-zinc-50 p-3 sm:p-4 dark:bg-white/5">
           <p class="text-xs text-zinc-500 sm:text-sm dark:text-zinc-400">累计投入</p>
-          <p class="mt-0.5 text-base font-semibold text-blue-600 sm:mt-1 sm:text-xl dark:text-blue-400">
+          <p class="money-text mt-0.5 text-base font-semibold text-blue-600 sm:mt-1 sm:text-xl dark:text-blue-400">
             {{ formatMoney(totalInvestment) }}
           </p>
         </div>

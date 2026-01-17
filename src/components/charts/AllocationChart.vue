@@ -136,7 +136,7 @@ const chartOption = computed(() => {
 </script>
 
 <template>
-  <div class="glass-card p-6">
+  <div class="glass-card p-3">
     <VChart :option="chartOption" autoresize style="height: 300px" />
   </div>
 </template>

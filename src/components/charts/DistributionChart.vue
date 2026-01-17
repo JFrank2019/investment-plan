@@ -13,6 +13,7 @@ import VChart from 'vue-echarts'
 import { useInvestmentStore } from '@/stores/investment'
 import { formatMoney } from '@/engine'
 import { useDark } from '@vueuse/core'
+import { getMoneyTextStyle, getMoneyAxisLabel } from '@/utils/chartConfig'
 
 use([CanvasRenderer, BarChart, TitleComponent, TooltipComponent, GridComponent, MarkLineComponent])
 
@@ -66,10 +67,11 @@ const chartOption = computed(() => {
       borderColor: isDark.value ? '#3f3f46' : '#e4e4e7',
       textStyle: {
         color: isDark.value ? '#fff' : '#18181b',
+        ...getMoneyTextStyle(),
       },
       formatter: (params: { value: number; name: string }[]) => {
         const p = params[0]
-        return p ? `<div>${p.name}</div><div>频次: ${p.value}</div>` : ''
+        return p ? `<div class="money-text">${p.name}</div><div class="money-text">频次: ${p.value}</div>` : ''
       },
     },
     grid: {
@@ -87,6 +89,7 @@ const chartOption = computed(() => {
         color: textColor,
         rotate: 45,
         interval: Math.floor(binCount / 6),
+        ...getMoneyAxisLabel(),
       },
     },
     yAxis: {
@@ -159,7 +162,7 @@ const chartOption = computed(() => {
 </script>
 
 <template>
-  <div class="glass-card p-6">
+  <div class="glass-card p-3">
     <VChart :option="chartOption" autoresize style="height: 400px" />
   </div>
 </template>

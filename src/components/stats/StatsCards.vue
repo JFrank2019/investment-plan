@@ -142,8 +142,8 @@ const cards = computed(() => {
       <div class="flex items-start justify-between">
         <div>
           <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">{{ card.title }}</p>
-          <p class="mt-2 text-2xl font-bold text-zinc-900 dark:text-white">{{ card.value }}</p>
-          <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ card.subValue }}</p>
+          <p class="money-text mt-2 text-2xl font-bold text-zinc-900 dark:text-white">{{ card.value }}</p>
+          <p class="money-text mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ card.subValue }}</p>
         </div>
         <div :class="['flex h-10 w-10 items-center justify-center rounded-lg', card.bgColor]">
           <component :is="card.icon" :class="['h-5 w-5', card.iconColor]" />

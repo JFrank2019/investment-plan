@@ -26,6 +26,9 @@
   /* 亮色主题背景 - 米白色 */
   --color-light-bg-start: #fafaf9;
   --color-light-bg-end: #f5f5f4;
+
+  /* 金融数字字体 */
+  --font-money: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
 
 /* 基础样式 */
@@ -149,4 +152,13 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
+}
+
+/* 金融数字字体 - 使用等宽字体和表格数字 */
+.money-text {
+  font-family: var(--font-money);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+  -webkit-font-feature-settings: 'tnum';
+  letter-spacing: 0.025em;
 }

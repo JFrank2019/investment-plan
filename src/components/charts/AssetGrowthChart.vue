@@ -13,6 +13,7 @@ import VChart from 'vue-echarts'
 import { useInvestmentStore } from '@/stores/investment'
 import { formatMoney, formatMonthLabel } from '@/engine'
 import { useDark } from '@vueuse/core'
+import { getMoneyTextStyle, getMoneyAxisLabel } from '@/utils/chartConfig'
 
 use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent])
 
@@ -54,13 +55,14 @@ const chartOption = computed(() => {
       borderColor: isDark.value ? '#3f3f46' : '#e4e4e7',
       textStyle: {
         color: isDark.value ? '#fff' : '#18181b',
+        ...getMoneyTextStyle(),
       },
       formatter: (params: { seriesName: string; value: number; axisValue: string }[]) => {
         const month = params[0]?.axisValue ?? ''
         let html = `<div class="font-medium">${month}</div>`
         params.forEach((p) => {
           if (p.value !== undefined) {
-            html += `<div class="flex justify-between gap-4"><span>${p.seriesName}</span><span class="font-medium">${formatMoney(p.value)}</span></div>`
+            html += `<div class="flex justify-between gap-4"><span>${p.seriesName}</span><span class="font-medium money-text">${formatMoney(p.value)}</span></div>`
           }
         })
         return html
@@ -90,6 +92,7 @@ const chartOption = computed(() => {
       splitLine: { lineStyle: { color: lineColor } },
       axisLabel: {
         color: textColor,
+        ...getMoneyAxisLabel(),
         formatter: (value: number) => formatMoney(value),
       },
     },
@@ -148,7 +151,7 @@ const chartOption = computed(() => {
 </script>
 
 <template>
-  <div class="glass-card p-6">
+  <div class="glass-card p-3">
     <VChart :option="chartOption" autoresize style="height: 400px" />
   </div>
 </template>
