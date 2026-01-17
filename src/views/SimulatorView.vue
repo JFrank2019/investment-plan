@@ -7,9 +7,11 @@ import StatsCards from '@/components/stats/StatsCards.vue'
 import AssetGrowthChart from '@/components/charts/AssetGrowthChart.vue'
 import DistributionChart from '@/components/charts/DistributionChart.vue'
 import AllocationChart from '@/components/charts/AllocationChart.vue'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 
 const store = useInvestmentStore()
 const activeTab = ref<'config' | 'results'>('config')
+const showResetConfirm = ref(false)
 
 async function handleRunSimulation() {
   const success = await store.runSimulation()
@@ -18,40 +20,49 @@ async function handleRunSimulation() {
   }
 }
 
-function handleReset() {
+function handleResetClick() {
+  showResetConfirm.value = true
+}
+
+function handleResetConfirm() {
   store.resetParams()
   activeTab.value = 'config'
+  showResetConfirm.value = false
 }
 </script>
 
 <template>
   <div class="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
     <!-- Header -->
-    <div class="mb-4 flex flex-col gap-2 sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-      <div>
-        <h1 class="text-xl font-bold text-zinc-900 sm:text-2xl dark:text-white">投资收益模拟器</h1>
-        <p class="mt-0.5 text-xs text-zinc-600 sm:mt-1 sm:text-sm dark:text-zinc-400">
-          配置参数，运行模拟，查看投资收益预测
-        </p>
-      </div>
+    <div class="mb-4 sm:mb-8">
+      <div class="mb-2 flex items-start justify-between gap-3 sm:mb-0 sm:flex-row sm:items-center">
+        <div class="flex-1">
+          <h1 class="text-xl font-bold text-zinc-900 sm:text-2xl dark:text-white">投资收益模拟器</h1>
+          <p class="mt-0.5 text-xs text-zinc-600 sm:mt-1 sm:text-sm dark:text-zinc-400">
+            配置参数，运行模拟，查看投资收益预测
+          </p>
+        </div>
 
-      <div class="flex items-center gap-2 sm:gap-3">
-        <button
-          @click="handleReset"
-          class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm dark:text-zinc-400 dark:hover:bg-white/10"
-        >
-          <RefreshCw class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          重置
-        </button>
-        <button
-          @click="handleRunSimulation"
-          :disabled="store.isCalculating"
-          class="btn-primary inline-flex items-center gap-1.5 !px-4 !py-2 text-xs sm:gap-2 sm:!px-6 sm:!py-2.5 sm:text-sm"
-        >
-          <Play v-if="!store.isCalculating" class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <RefreshCw v-else class="h-3.5 w-3.5 animate-spin sm:h-4 sm:w-4" />
-          {{ store.isCalculating ? '计算中...' : '运行模拟' }}
-        </button>
+        <div class="flex items-center gap-2 sm:gap-3">
+          <button
+            @click="handleResetClick"
+            class="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-200 text-zinc-700 transition-colors hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600 sm:h-auto sm:w-auto sm:rounded-md sm:bg-transparent sm:px-4 sm:py-2.5 sm:text-sm sm:text-zinc-600 sm:dark:bg-transparent sm:dark:text-zinc-400 sm:dark:hover:bg-white/10"
+            title="重置"
+          >
+            <RefreshCw class="h-4 w-4 sm:h-4 sm:w-4" />
+            <span class="hidden sm:ml-2 sm:inline">重置</span>
+          </button>
+          <button
+            @click="handleRunSimulation"
+            :disabled="store.isCalculating"
+            class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white transition-colors hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-600 dark:hover:bg-blue-700 sm:h-auto sm:w-auto sm:rounded-md sm:bg-zinc-900 sm:px-6 sm:py-2.5 sm:text-sm sm:text-white sm:dark:bg-white sm:dark:text-zinc-900 sm:dark:hover:bg-zinc-200"
+            :title="store.isCalculating ? '计算中...' : '运行模拟'"
+          >
+            <Play v-if="!store.isCalculating" class="h-4 w-4 sm:h-4 sm:w-4" />
+            <RefreshCw v-else class="h-4 w-4 animate-spin sm:h-4 sm:w-4" />
+            <span class="hidden sm:ml-2 sm:inline">{{ store.isCalculating ? '计算中...' : '运行模拟' }}</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -132,5 +143,15 @@ function handleReset() {
 
       <AllocationChart />
     </div>
+
+    <!-- 确认对话框 -->
+    <ConfirmDialog
+      v-model:open="showResetConfirm"
+      title="确认重置"
+      message="重置后将恢复所有参数为默认值，此操作不可撤销。确定要继续吗？"
+      confirm-text="确认重置"
+      cancel-text="取消"
+      @confirm="handleResetConfirm"
+    />
   </div>
 </template>
