@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useInvestmentStore } from '@/stores/investment'
 import { formatMoney } from '@/engine'
 import { Wallet, PiggyBank, TrendingUp, RefreshCw, Clock } from 'lucide-vue-next'
+import RangeSlider from './RangeSlider.vue'
 
 const store = useInvestmentStore()
 
@@ -68,14 +69,13 @@ function updateRebalanceRatio(value: number) {
           <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
             初始偏股比例：{{ (store.params.initialEquityRatio * 100).toFixed(0) }}%
           </label>
-          <input
-            type="range"
-            :value="store.params.initialEquityRatio * 100"
-            @input="updateEquityRatio(Number(($event.target as HTMLInputElement).value))"
-            min="0"
-            max="100"
-            step="5"
-            class="w-full accent-blue-500"
+          <RangeSlider
+            :model-value="store.params.initialEquityRatio * 100"
+            @update:model-value="updateEquityRatio"
+            :min="0"
+            :max="100"
+            :step="5"
+            accent-color="blue"
           />
           <div class="mt-0.5 flex justify-between text-xs text-zinc-500 dark:text-zinc-400">
             <span>偏股 {{ (store.params.initialEquityRatio * 100).toFixed(0) }}%</span>
@@ -125,14 +125,13 @@ function updateRebalanceRatio(value: number) {
           <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
             定投偏股比例：{{ (store.params.investEquityRatio * 100).toFixed(0) }}%
           </label>
-          <input
-            type="range"
-            :value="store.params.investEquityRatio * 100"
-            @input="updateInvestEquityRatio(Number(($event.target as HTMLInputElement).value))"
-            min="0"
-            max="100"
-            step="5"
-            class="w-full accent-emerald-500"
+          <RangeSlider
+            :model-value="store.params.investEquityRatio * 100"
+            @update:model-value="updateInvestEquityRatio"
+            :min="0"
+            :max="100"
+            :step="5"
+            accent-color="emerald"
           />
           <div class="mt-0.5 flex justify-between text-xs text-zinc-500 dark:text-zinc-400">
             <span>偏股 {{ (store.params.investEquityRatio * 100).toFixed(0) }}%</span>
