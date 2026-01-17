@@ -17,6 +17,11 @@ async function handleRunSimulation() {
     activeTab.value = 'results'
   }
 }
+
+function handleReset() {
+  store.resetParams()
+  activeTab.value = 'config'
+}
 </script>
 
 <template>
@@ -32,7 +37,7 @@ async function handleRunSimulation() {
 
       <div class="flex items-center gap-2 sm:gap-3">
         <button
-          @click="store.resetParams"
+          @click="handleReset"
           class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm dark:text-zinc-400 dark:hover:bg-white/10"
         >
           <RefreshCw class="h-3.5 w-3.5 sm:h-4 sm:w-4" />

@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useInvestmentStore } from '@/stores/investment'
 import { formatMoney } from '@/engine'
-import { Wallet, PiggyBank, TrendingUp, RefreshCw, Clock, Shuffle } from 'lucide-vue-next'
+import { Wallet, PiggyBank, TrendingUp, RefreshCw, Clock } from 'lucide-vue-next'
 
 const store = useInvestmentStore()
 

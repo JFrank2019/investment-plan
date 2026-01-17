@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
+import { useLocalStorage } from '@vueuse/core'
 import {
   type SimulationParams,
   type DeterministicResult,
@@ -11,8 +12,10 @@ import {
 } from '@/engine'
 
 export const useInvestmentStore = defineStore('investment', () => {
-  // 参数配置
-  const params = ref<SimulationParams>({ ...DEFAULT_PARAMS })
+  // 参数配置 - 使用 localStorage 持久化
+  const params = useLocalStorage<SimulationParams>('investment-params', { ...DEFAULT_PARAMS }, {
+    mergeDefaults: true,
+  })
 
   // 计算结果
   const deterministicResult = ref<DeterministicResult | null>(null)

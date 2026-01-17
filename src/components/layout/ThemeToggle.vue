@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { useDark, useToggle } from '@vueuse/core'
+import { useDark, useToggle, usePreferredDark } from '@vueuse/core'
+import { watch } from 'vue'
 import { Sun, Moon } from 'lucide-vue-next'
 
+const preferredDark = usePreferredDark()
 const isDark = useDark({
   selector: 'html',
   attribute: 'class',
-  storageKey: 'theme',
 })
+
+// 跟随系统主题变化
+watch(preferredDark, (value) => {
+  isDark.value = value
+}, { immediate: true })
+
 const toggleDark = useToggle(isDark)
 </script>
 
