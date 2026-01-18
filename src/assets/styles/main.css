@@ -167,14 +167,25 @@ body {
   color: var(--text-primary);
 }
 
+/* 隐藏数字输入框的原生 spinner 按钮 */
+.input-field[type='number']::-webkit-outer-spin-button,
+.input-field[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input-field[type='number'] {
+  -moz-appearance: textfield;
+}
+
 .input-field:hover {
   border-color: rgba(59, 130, 246, 0.3);
 }
 
 .input-field:focus {
-  @apply outline-none ring-2;
-  ring-color: rgba(59, 130, 246, 0.2);
-  border-color: rgba(59, 130, 246, 0.5);
+  @apply outline-none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .dark .input-field:hover {
@@ -182,8 +193,8 @@ body {
 }
 
 .dark .input-field:focus {
-  ring-color: rgba(59, 130, 246, 0.25);
-  border-color: rgba(59, 130, 246, 0.6);
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 /* 禁用状态 */
