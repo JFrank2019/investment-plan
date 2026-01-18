@@ -74,13 +74,13 @@ function handleBackdropClick(e: MouseEvent) {
             <div class="flex gap-3">
               <button
                 @click="handleCancel"
-                class="flex-1 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+                class="flex-1 rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 transition-all hover:bg-zinc-50 dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
               >
                 {{ cancelText }}
               </button>
               <button
                 @click="handleConfirm"
-                class="flex-1 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                class="btn-primary flex-1 rounded-lg! px-4! py-2.5! text-sm"
               >
                 {{ confirmText }}
               </button>

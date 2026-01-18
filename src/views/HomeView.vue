@@ -59,10 +59,10 @@ const features = [
 
       <!-- Background Decoration -->
       <div
-        class="absolute -top-40 right-0 -z-10 h-[600px] w-[600px] rounded-full bg-primary/10 blur-3xl"
+        class="absolute -top-40 right-0 -z-10 h-[600px] w-[600px] rounded-full bg-blue-500/20 blur-3xl dark:bg-blue-500/10"
       />
       <div
-        class="absolute -bottom-40 left-0 -z-10 h-[400px] w-[400px] rounded-full bg-primary-dark/10 blur-3xl"
+        class="absolute -bottom-40 left-0 -z-10 h-[400px] w-[400px] rounded-full bg-blue-600/15 blur-3xl dark:bg-blue-600/10"
       />
     </section>
 
@@ -80,12 +80,12 @@ const features = [
           <div
             v-for="feature in features"
             :key="feature.title"
-            class="glass-card p-6 transition-all duration-300 hover:scale-[1.02]"
+            class="glass-card glass-card--interactive p-6 transition-all duration-300 hover:scale-[1.02]"
           >
             <div
-              class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-500/20"
+              class="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/25"
             >
-              <component :is="feature.icon" class="h-6 w-6 text-primary" />
+              <component :is="feature.icon" class="h-6 w-6 text-white" />
             </div>
             <h3 class="mt-4 text-lg font-semibold text-zinc-900 dark:text-white">
               {{ feature.title }}
@@ -107,8 +107,8 @@ const features = [
             style="
               background: linear-gradient(
                 135deg,
-                rgba(139, 92, 246, 0.1) 0%,
-                rgba(99, 102, 241, 0.1) 100%
+                rgba(59, 130, 246, 0.1) 0%,
+                rgba(37, 99, 235, 0.1) 100%
               );
             "
           >

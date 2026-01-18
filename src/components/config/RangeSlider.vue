@@ -93,7 +93,7 @@ watch(() => props.modelValue, updateFromProps)
 <template>
   <div
     ref="sliderRef"
-    class="relative h-6 w-full cursor-pointer select-none"
+    class="relative h-8 w-full cursor-pointer select-none"
     :class="{ 'cursor-not-allowed opacity-50': disabled }"
     @mousedown="handleStart"
     @touchstart.prevent="handleStart"
@@ -107,19 +107,20 @@ watch(() => props.modelValue, updateFromProps)
     <div
       class="absolute top-1/2 h-2 -translate-y-1/2 rounded-full transition-all"
       :class="{
-        'bg-blue-500': accentColor === 'blue',
-        'bg-emerald-500': accentColor === 'emerald',
+        'bg-linear-to-r from-blue-400 to-blue-500': accentColor === 'blue',
+        'bg-linear-to-r from-emerald-400 to-emerald-500': accentColor === 'emerald',
       }"
       :style="{ width: `${percentage}%` }"
     ></div>
 
     <!-- 滑块 -->
     <div
-      class="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-white shadow-md transition-all"
+      class="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-white transition-all duration-150"
       :class="{
-        'border-blue-500': accentColor === 'blue' && !disabled,
-        'border-emerald-500': accentColor === 'emerald' && !disabled,
-        'scale-110': isDragging,
+        'border-blue-500 shadow-[0_2px_8px_rgba(59,130,246,0.4)]': accentColor === 'blue' && !disabled,
+        'border-emerald-500 shadow-[0_2px_8px_rgba(16,185,129,0.4)]': accentColor === 'emerald' && !disabled,
+        'scale-125 shadow-[0_4px_12px_rgba(59,130,246,0.5)]': isDragging && accentColor === 'blue',
+        'scale-125 shadow-[0_4px_12px_rgba(16,185,129,0.5)]': isDragging && accentColor === 'emerald',
       }"
       :style="{ left: `${percentage}%` }"
     ></div>

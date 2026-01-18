@@ -131,7 +131,7 @@ function updateRebalanceRatio(value: number) {
             :min="0"
             :max="100"
             :step="5"
-            accent-color="emerald"
+            accent-color="blue"
           />
           <div class="mt-0.5 flex justify-between text-xs text-zinc-500 dark:text-zinc-400">
             <span>偏股 {{ (store.params.investEquityRatio * 100).toFixed(0) }}%</span>

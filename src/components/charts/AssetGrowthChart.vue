@@ -103,7 +103,7 @@ const chartOption = computed(() => {
         data: p95Values,
         lineStyle: { opacity: 0 },
         areaStyle: {
-          color: 'rgba(139, 92, 246, 0.15)',
+          color: 'rgba(59, 130, 246, 0.15)',
         },
         stack: 'confidence',
         symbol: 'none',
@@ -124,8 +124,8 @@ const chartOption = computed(() => {
         name: '确定性预测',
         type: 'line',
         data: deterministicValues,
-        lineStyle: { width: 3, color: '#8b5cf6' },
-        itemStyle: { color: '#8b5cf6' },
+        lineStyle: { width: 3, color: '#3b82f6' },
+        itemStyle: { color: '#3b82f6' },
         symbol: 'circle',
         symbolSize: 6,
       },
@@ -151,7 +151,7 @@ const chartOption = computed(() => {
 </script>
 
 <template>
-  <div class="glass-card p-3">
+  <div class="glass-card p-4 sm:p-6">
     <VChart :option="chartOption" autoresize style="height: 400px" />
   </div>
 </template>

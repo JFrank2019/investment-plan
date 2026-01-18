@@ -32,35 +32,35 @@ function handleResetConfirm() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
+  <div class="mx-auto max-w-7xl px-3 py-3 sm:px-6 sm:py-6 lg:px-8">
     <!-- Header -->
-    <div class="mb-4 sm:mb-8">
-      <div class="mb-2 flex items-start justify-between gap-3 sm:mb-0 sm:flex-row sm:items-center">
-        <div class="flex-1">
-          <h1 class="text-xl font-bold text-zinc-900 sm:text-2xl dark:text-white">投资收益模拟器</h1>
-          <p class="mt-0.5 text-xs text-zinc-600 sm:mt-1 sm:text-sm dark:text-zinc-400">
+    <div class="mb-3 sm:mb-6">
+      <div class="flex items-center justify-between gap-2">
+        <div class="min-w-0 flex-1">
+          <h1 class="text-base font-bold text-zinc-900 sm:text-xl lg:text-2xl dark:text-white">投资收益模拟器</h1>
+          <p class="mt-0.5 hidden text-sm text-zinc-600 sm:block dark:text-zinc-400">
             配置参数，运行模拟，查看投资收益预测
           </p>
         </div>
 
-        <div class="flex items-center gap-2 sm:gap-3">
+        <div class="flex items-center gap-2">
           <button
             @click="handleResetClick"
-            class="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-200 text-zinc-700 transition-colors hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600 sm:h-auto sm:w-auto sm:rounded-md sm:bg-transparent sm:px-4 sm:py-2.5 sm:text-sm sm:text-zinc-600 sm:dark:bg-transparent sm:dark:text-zinc-400 sm:dark:hover:bg-white/10"
+            class="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 sm:h-9 sm:w-auto sm:px-3 sm:py-2 sm:text-sm dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-200"
             title="重置"
           >
-            <RefreshCw class="h-4 w-4 sm:h-4 sm:w-4" />
-            <span class="hidden sm:ml-2 sm:inline">重置</span>
+            <RefreshCw class="h-4 w-4" />
+            <span class="hidden sm:ml-1.5 sm:inline">重置</span>
           </button>
           <button
             @click="handleRunSimulation"
             :disabled="store.isCalculating"
-            class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white transition-colors hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-600 dark:hover:bg-blue-700 sm:h-auto sm:w-auto sm:rounded-md sm:bg-zinc-900 sm:px-6 sm:py-2.5 sm:text-sm sm:text-white sm:dark:bg-white sm:dark:text-zinc-900 sm:dark:hover:bg-zinc-200"
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500 text-white shadow-md shadow-blue-500/25 transition-all hover:bg-blue-600 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed sm:h-9 sm:w-auto sm:rounded-lg sm:bg-linear-to-r sm:from-blue-500 sm:to-blue-600 sm:px-4 sm:py-2 sm:text-sm sm:hover:from-blue-600 sm:hover:to-blue-700"
             :title="store.isCalculating ? '计算中...' : '运行模拟'"
           >
-            <Play v-if="!store.isCalculating" class="h-4 w-4 sm:h-4 sm:w-4" />
-            <RefreshCw v-else class="h-4 w-4 animate-spin sm:h-4 sm:w-4" />
-            <span class="hidden sm:ml-2 sm:inline">{{ store.isCalculating ? '计算中...' : '运行模拟' }}</span>
+            <Play v-if="!store.isCalculating" class="h-4 w-4" />
+            <RefreshCw v-else class="h-4 w-4 animate-spin" />
+            <span class="hidden sm:ml-1.5 sm:inline">{{ store.isCalculating ? '计算中...' : '运行模拟' }}</span>
           </button>
         </div>
       </div>
@@ -99,13 +99,13 @@ function handleResetConfirm() {
     </div>
 
     <!-- Tabs -->
-    <div class="mb-4 flex gap-1 rounded-lg bg-zinc-100 p-1 sm:mb-6 dark:bg-white/5">
+    <div class="mb-3 flex gap-1 rounded-xl bg-zinc-100 p-1 sm:mb-5 dark:bg-white/5">
       <button
         @click="activeTab = 'config'"
-        class="flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all"
+        class="flex-1 rounded-lg px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2.5 sm:text-sm"
         :class="[
           activeTab === 'config'
-            ? 'bg-white text-zinc-900 shadow-sm dark:bg-white/10 dark:text-white'
+            ? 'bg-white text-blue-600 shadow-sm dark:bg-white/10 dark:text-blue-400'
             : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white',
         ]"
       >
@@ -114,10 +114,10 @@ function handleResetConfirm() {
       <button
         @click="activeTab = 'results'"
         :disabled="!store.hasCalculated"
-        class="flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all"
+        class="flex-1 rounded-lg px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2.5 sm:text-sm"
         :class="[
           activeTab === 'results'
-            ? 'bg-white text-zinc-900 shadow-sm dark:bg-white/10 dark:text-white'
+            ? 'bg-white text-blue-600 shadow-sm dark:bg-white/10 dark:text-blue-400'
             : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white',
           !store.hasCalculated && 'cursor-not-allowed opacity-50',
         ]"

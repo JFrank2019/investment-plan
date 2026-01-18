@@ -77,7 +77,7 @@ const chartOption = computed(() => {
     grid: {
       left: '3%',
       right: '4%',
-      bottom: '10%',
+      bottom: '3%',
       top: '15%',
       containLabel: true,
     },
@@ -87,8 +87,9 @@ const chartOption = computed(() => {
       axisLine: { lineStyle: { color: lineColor } },
       axisLabel: {
         color: textColor,
-        rotate: 45,
-        interval: Math.floor(binCount / 6),
+        rotate: 35,
+        interval: Math.floor(binCount / 5),
+        fontSize: 10,
         ...getMoneyAxisLabel(),
       },
     },
@@ -112,8 +113,8 @@ const chartOption = computed(() => {
             x2: 0,
             y2: 1,
             colorStops: [
-              { offset: 0, color: '#8b5cf6' },
-              { offset: 1, color: '#6366f1' },
+              { offset: 0, color: '#3b82f6' },
+              { offset: 1, color: '#2563eb' },
             ],
           },
           borderRadius: [4, 4, 0, 0],
@@ -162,7 +163,7 @@ const chartOption = computed(() => {
 </script>
 
 <template>
-  <div class="glass-card p-3">
+  <div class="glass-card p-4 sm:p-6">
     <VChart :option="chartOption" autoresize style="height: 400px" />
   </div>
 </template>
