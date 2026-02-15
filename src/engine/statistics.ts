@@ -1,5 +1,10 @@
 import type { SimulationPath, SimulationStatistics, ConfidenceBand, RiskMetrics } from './types'
 
+function safeDivide(numerator: number, denominator: number): number {
+  if (denominator === 0) return 0
+  return numerator / denominator
+}
+
 /**
  * 将年化通胀率转换为月通胀率（复利）
  */
@@ -108,6 +113,28 @@ export function calculateStatistics(
   confidenceBands: ConfidenceBand[],
   riskFreeRate: number = 0.03, // 无风险利率，默认3%
 ): SimulationStatistics {
+  if (paths.length === 0) {
+    return {
+      finalValueMean: 0,
+      finalValueMedian: 0,
+      finalValueP5: 0,
+      finalValueP25: 0,
+      finalValueP75: 0,
+      finalValueP95: 0,
+      finalValueMin: 0,
+      finalValueMax: 0,
+      returnMean: 0,
+      returnMedian: 0,
+      returnP5: 0,
+      returnP95: 0,
+      maxDrawdownMean: 0,
+      maxDrawdownP95: 0,
+      lossProbability: 0,
+      riskMetrics: calculateRiskMetrics([], riskFreeRate),
+      confidenceBands,
+    }
+  }
+
   // 提取终值和收益率
   const finalValues = paths.map((p) => p.finalValue)
   const returns = paths.map((p) => p.totalReturn)
@@ -118,7 +145,7 @@ export function calculateStatistics(
     const finalState = p.states[p.states.length - 1]
     return finalState && finalState.totalAsset < finalState.cumulativeInvestment
   })
-  const lossProbability = lossPaths.length / paths.length
+  const lossProbability = safeDivide(lossPaths.length, paths.length)
 
   // 计算风险指标
   const riskMetrics = calculateRiskMetrics(paths, riskFreeRate)
@@ -284,6 +311,22 @@ export function calculateRiskMetrics(
   paths: SimulationPath[],
   riskFreeRate: number = 0.03,
 ): RiskMetrics {
+  if (paths.length === 0) {
+    return {
+      maxDrawdownMean: 0,
+      maxDrawdownP95: 0,
+      lossProbability: 0,
+      sharpeRatio: 0,
+      sortinoRatio: 0,
+      var95: 0,
+      var95Percent: 0,
+      cvar95: 0,
+      maxDrawdownDuration: 0,
+      avgDrawdownDuration: 0,
+      recoveryProbability: 0,
+    }
+  }
+
   const monthlyReturns = paths.flatMap(extractMonthlyTimeWeightedReturns)
   const finalValues = paths.map((p) => p.finalValue)
   const maxDrawdowns = paths.map((p) => p.maxDrawdown)
@@ -293,14 +336,14 @@ export function calculateRiskMetrics(
     const finalState = p.states[p.states.length - 1]
     return finalState && finalState.totalAsset < finalState.cumulativeInvestment
   })
-  const lossProbability = lossPaths.length / paths.length
+  const lossProbability = safeDivide(lossPaths.length, paths.length)
 
   // 计算回撤持续期统计
   const drawdownStats = paths.map(calculateDrawdownDurations)
   const maxDrawdownDurations = drawdownStats.map((d) => d.maxDuration)
   const avgDrawdownDurations = drawdownStats.map((d) => d.avgDuration)
   const recoveredCount = drawdownStats.filter((d) => d.recovered).length
-  const recoveryProbability = recoveredCount / paths.length
+  const recoveryProbability = safeDivide(recoveredCount, paths.length)
 
   // 计算 VaR
   const var95 = valueAtRisk(finalValues, 95)
@@ -368,14 +411,3 @@ export function formatPercent(value: number, decimals: number = 2): string {
   return `${(value * 100).toFixed(decimals)}%`
 }
 
-/**
- * 格式化金额（完整格式，带千分位）
- */
-export function formatMoneyFull(value: number): string {
-  return value.toLocaleString('zh-CN', {
-    style: 'currency',
-    currency: 'CNY',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  })
-}

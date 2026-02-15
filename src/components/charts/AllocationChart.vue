@@ -8,6 +8,7 @@ import VChart from 'vue-echarts'
 import { useInvestmentStore } from '@/stores/investment'
 import { formatMonthLabel } from '@/engine'
 import { useDark } from '@vueuse/core'
+import { escapeHtml } from '@/utils/chartConfig'
 
 use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, GridComponent, LegendComponent])
 
@@ -48,9 +49,9 @@ const chartOption = computed(() => {
       },
       formatter: (params: { seriesName: string; value: string; axisValue: string }[]) => {
         const month = params[0]?.axisValue ?? ''
-        let html = `<div class="font-medium">${month}</div>`
+        let html = `<div class="font-medium">${escapeHtml(month)}</div>`
         params.forEach((p) => {
-          html += `<div class="flex justify-between gap-4"><span>${p.seriesName}</span><span class="font-medium">${p.value}%</span></div>`
+          html += `<div class="flex justify-between gap-4"><span>${escapeHtml(p.seriesName)}</span><span class="font-medium">${escapeHtml(`${p.value}`)}%</span></div>`
         })
         return html
       },

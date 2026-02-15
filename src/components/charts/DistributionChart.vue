@@ -13,7 +13,7 @@ import VChart from 'vue-echarts'
 import { useInvestmentStore } from '@/stores/investment'
 import { formatMoney } from '@/engine'
 import { useDark } from '@vueuse/core'
-import { getMoneyTextStyle, getMoneyAxisLabel } from '@/utils/chartConfig'
+import { getMoneyTextStyle, getMoneyAxisLabel, escapeHtml } from '@/utils/chartConfig'
 
 use([CanvasRenderer, BarChart, TitleComponent, TooltipComponent, GridComponent, MarkLineComponent])
 
@@ -32,11 +32,16 @@ const chartOption = computed(() => {
   const min = Math.min(...finalValues)
   const max = Math.max(...finalValues)
   const binCount = 30
-  const binWidth = (max - min) / binCount
+  const range = max - min
+  const isSingleValueDistribution = !Number.isFinite(range) || range <= 0
+  const binWidth = isSingleValueDistribution ? 1 : range / binCount
   const bins: number[] = new Array(binCount).fill(0)
 
   finalValues.forEach((v) => {
-    const binIndex = Math.min(Math.floor((v - min) / binWidth), binCount - 1)
+    const rawBinIndex = Math.floor((v - min) / binWidth)
+    const binIndex = isSingleValueDistribution
+      ? Math.floor(binCount / 2)
+      : Math.max(0, Math.min(rawBinIndex, binCount - 1))
     if (bins[binIndex] !== undefined) {
       bins[binIndex]++
     }
@@ -71,7 +76,8 @@ const chartOption = computed(() => {
       },
       formatter: (params: { value: number; name: string }[]) => {
         const p = params[0]
-        return p ? `<div class="money-text">${p.name}</div><div class="money-text">频次: ${p.value}</div>` : ''
+        if (!p) return ''
+        return `<div class="money-text">${escapeHtml(p.name)}</div><div class="money-text">频次: ${p.value}</div>`
       },
     },
     grid: {
@@ -126,7 +132,18 @@ const chartOption = computed(() => {
           data: [
             {
               name: '中位数',
-              xAxis: binLabels[Math.floor(((stats.finalValueMedian - min) / binWidth))],
+              xAxis:
+                binLabels[
+                  Math.max(
+                    0,
+                    Math.min(
+                      binCount - 1,
+                      isSingleValueDistribution
+                        ? Math.floor(binCount / 2)
+                        : Math.floor((stats.finalValueMedian - min) / binWidth),
+                    ),
+                  )
+                ],
               lineStyle: { color: '#22c55e', width: 2 },
               label: {
                 formatter: '中位数',
@@ -136,7 +153,18 @@ const chartOption = computed(() => {
             },
             {
               name: '5%分位',
-              xAxis: binLabels[Math.floor(((stats.finalValueP5 - min) / binWidth))],
+              xAxis:
+                binLabels[
+                  Math.max(
+                    0,
+                    Math.min(
+                      binCount - 1,
+                      isSingleValueDistribution
+                        ? Math.floor(binCount / 2)
+                        : Math.floor((stats.finalValueP5 - min) / binWidth),
+                    ),
+                  )
+                ],
               lineStyle: { color: '#ef4444', width: 2 },
               label: {
                 formatter: '5%',
@@ -146,7 +174,18 @@ const chartOption = computed(() => {
             },
             {
               name: '95%分位',
-              xAxis: binLabels[Math.min(Math.floor(((stats.finalValueP95 - min) / binWidth)), binCount - 1)],
+              xAxis:
+                binLabels[
+                  Math.max(
+                    0,
+                    Math.min(
+                      binCount - 1,
+                      isSingleValueDistribution
+                        ? Math.floor(binCount / 2)
+                        : Math.floor((stats.finalValueP95 - min) / binWidth),
+                    ),
+                  )
+                ],
               lineStyle: { color: '#f59e0b', width: 2 },
               label: {
                 formatter: '95%',

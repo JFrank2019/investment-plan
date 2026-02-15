@@ -144,16 +144,6 @@ export interface RiskMetrics {
 }
 
 /**
- * 图表数据格式
- */
-export interface ChartDataPoint {
-  month: number
-  label: string // 如 "2026-01"
-  value: number
-  [key: string]: string | number // 允许扩展字段
-}
-
-/**
  * 风险等级
  */
 export type RiskLevel = 'conservative' | 'balanced' | 'aggressive'
@@ -196,6 +186,83 @@ export const DEFAULT_PARAMS: SimulationParams = {
   inflationRate: 0.025, // 年化通胀率（默认2.5%）
 }
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
+function normalizeInteger(value: number, min: number, max: number): number {
+  return clamp(Math.round(value), min, max)
+}
+
+/**
+ * 归一化参数（用于本地存储恢复与外部输入兜底）
+ */
+export function sanitizeSimulationParams(
+  rawParams: Partial<SimulationParams> | null | undefined,
+): SimulationParams {
+  const raw = rawParams ?? {}
+
+  const initialCapital = isFiniteNumber(raw.initialCapital)
+    ? Math.max(0, raw.initialCapital)
+    : DEFAULT_PARAMS.initialCapital
+  const initialEquityRatio = isFiniteNumber(raw.initialEquityRatio)
+    ? clamp(raw.initialEquityRatio, 0, 1)
+    : DEFAULT_PARAMS.initialEquityRatio
+  const weeklyInvestment = isFiniteNumber(raw.weeklyInvestment)
+    ? Math.max(0, raw.weeklyInvestment)
+    : DEFAULT_PARAMS.weeklyInvestment
+  const investEquityRatio = isFiniteNumber(raw.investEquityRatio)
+    ? clamp(raw.investEquityRatio, 0, 1)
+    : DEFAULT_PARAMS.investEquityRatio
+  const equityReturn = isFiniteNumber(raw.equityReturn)
+    ? clamp(raw.equityReturn, -1, 0.5)
+    : DEFAULT_PARAMS.equityReturn
+  const bondReturn = isFiniteNumber(raw.bondReturn)
+    ? clamp(raw.bondReturn, -0.5, 0.3)
+    : DEFAULT_PARAMS.bondReturn
+  const equityVolatility = isFiniteNumber(raw.equityVolatility)
+    ? clamp(raw.equityVolatility, 0, 1)
+    : DEFAULT_PARAMS.equityVolatility
+  const bondVolatility = isFiniteNumber(raw.bondVolatility)
+    ? clamp(raw.bondVolatility, 0, 0.5)
+    : DEFAULT_PARAMS.bondVolatility
+  const rebalancePeriod = isFiniteNumber(raw.rebalancePeriod)
+    ? normalizeInteger(raw.rebalancePeriod, 0, 120)
+    : DEFAULT_PARAMS.rebalancePeriod
+  const rebalanceTargetEquityRatio = isFiniteNumber(raw.rebalanceTargetEquityRatio)
+    ? clamp(raw.rebalanceTargetEquityRatio, 0, 1)
+    : DEFAULT_PARAMS.rebalanceTargetEquityRatio
+  const simulationMonths = isFiniteNumber(raw.simulationMonths)
+    ? normalizeInteger(raw.simulationMonths, 1, 600)
+    : DEFAULT_PARAMS.simulationMonths
+  const monteCarloPathCount = isFiniteNumber(raw.monteCarloPathCount)
+    ? normalizeInteger(raw.monteCarloPathCount, 100, 10000)
+    : DEFAULT_PARAMS.monteCarloPathCount
+  const inflationRate = isFiniteNumber(raw.inflationRate)
+    ? clamp(raw.inflationRate, -0.5, 0.5)
+    : DEFAULT_PARAMS.inflationRate
+
+  return {
+    initialCapital,
+    initialEquityRatio,
+    weeklyInvestment,
+    investEquityRatio,
+    equityReturn,
+    bondReturn,
+    equityVolatility,
+    bondVolatility,
+    rebalancePeriod,
+    rebalanceTargetEquityRatio,
+    simulationMonths,
+    monteCarloPathCount,
+    inflationRate,
+  }
+}
+
 /**
  * 参数验证
  */
@@ -217,9 +284,6 @@ export function validateParams(params: SimulationParams): string[] {
   if (params.equityReturn < -1) {
     errors.push('偏股年化收益率不能低于-100%')
   }
-  if (params.equityReturn > 0.5) {
-    errors.push('警告：偏股年化收益率超过50%，请确认是否合理')
-  }
   if (params.bondReturn < -0.5 || params.bondReturn > 0.3) {
     errors.push('偏债年化收益率应在-50%到30%之间')
   }
@@ -229,11 +293,20 @@ export function validateParams(params: SimulationParams): string[] {
   if (params.bondVolatility < 0 || params.bondVolatility > 0.5) {
     errors.push('偏债波动率必须在0-50%之间')
   }
+  if (params.rebalancePeriod < 0 || params.rebalancePeriod > 120 || !Number.isInteger(params.rebalancePeriod)) {
+    errors.push('再平衡周期必须为0-120的整数（月）')
+  }
+  if (params.rebalanceTargetEquityRatio < 0 || params.rebalanceTargetEquityRatio > 1) {
+    errors.push('再平衡目标偏股比例必须在0-1之间')
+  }
   if (params.simulationMonths <= 0 || params.simulationMonths > 600) {
     errors.push('模拟时长必须在1-600个月之间')
   }
   if (params.monteCarloPathCount < 100 || params.monteCarloPathCount > 10000) {
     errors.push('蒙特卡洛路径数必须在100-10000之间')
+  }
+  if (params.inflationRate < -0.5 || params.inflationRate > 0.5) {
+    errors.push('年化通胀率应在-50%到50%之间')
   }
 
   return errors

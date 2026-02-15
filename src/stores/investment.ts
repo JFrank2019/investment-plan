@@ -8,9 +8,14 @@ import {
   type PortfolioPreset,
   DEFAULT_PARAMS,
   validateParams,
+  sanitizeSimulationParams,
   runDeterministicSimulation,
-  runMonteCarloSimulation,
 } from '@/engine'
+import {
+  runMonteCarloSimulationOffMainThread,
+  cancelMonteCarloSimulation,
+  MonteCarloCancelledError,
+} from '@/engine/monteCarloWorkerClient'
 
 export const useInvestmentStore = defineStore('investment', () => {
   // 参数配置 - 使用 localStorage 持久化
@@ -26,6 +31,11 @@ export const useInvestmentStore = defineStore('investment', () => {
   const isCalculating = ref(false)
   const errors = ref<string[]>([])
   const hasCalculated = ref(false)
+  const monteCarloProgress = ref(0)
+  const currentRunToken = ref(0)
+
+  // 首次加载时对持久化参数做兜底归一化，避免 localStorage 脏数据污染计算链路
+  params.value = sanitizeSimulationParams(params.value)
 
   // 参数验证警告
   const warnings = computed(() => {
@@ -41,23 +51,24 @@ export const useInvestmentStore = defineStore('investment', () => {
 
   // 更新参数
   function updateParams(newParams: Partial<SimulationParams>) {
-    params.value = { ...params.value, ...newParams }
+    params.value = sanitizeSimulationParams({ ...params.value, ...newParams })
     // 参数变化后标记需要重新计算
     hasCalculated.value = false
   }
 
   // 重置参数
   function resetParams() {
-    params.value = { ...DEFAULT_PARAMS }
+    params.value = sanitizeSimulationParams({ ...DEFAULT_PARAMS })
     deterministicResult.value = null
     monteCarloResult.value = null
     hasCalculated.value = false
+    monteCarloProgress.value = 0
     errors.value = []
   }
 
   // 应用预设模板
   function applyPreset(preset: PortfolioPreset) {
-    params.value = {
+    params.value = sanitizeSimulationParams({
       ...params.value,
       initialEquityRatio: preset.initialEquityRatio,
       investEquityRatio: preset.investEquityRatio,
@@ -67,49 +78,81 @@ export const useInvestmentStore = defineStore('investment', () => {
       bondVolatility: preset.bondVolatility,
       rebalancePeriod: preset.rebalancePeriod,
       rebalanceTargetEquityRatio: preset.rebalanceTargetEquityRatio,
-    }
+    })
     hasCalculated.value = false
   }
 
   // 执行计算
   async function runSimulation() {
-    // 验证参数
-    errors.value = validateParams(params.value)
-    if (errors.value.length > 0) {
+    if (isCalculating.value) {
       return false
     }
 
+    const safeParams = sanitizeSimulationParams(params.value)
+    params.value = safeParams
+
+    // 验证参数
+    errors.value = validateParams(safeParams)
+    if (errors.value.length > 0) {
+      monteCarloProgress.value = 0
+      return false
+    }
+
+    const runToken = currentRunToken.value + 1
+    currentRunToken.value = runToken
     isCalculating.value = true
+    monteCarloProgress.value = 0
 
     try {
       // 使用 setTimeout 让 UI 有机会更新
       await new Promise((resolve) => setTimeout(resolve, 10))
 
       // 运行确定性计算
-      deterministicResult.value = runDeterministicSimulation(params.value)
+      const deterministic = runDeterministicSimulation(safeParams)
 
       // 运行蒙特卡洛模拟（可能较慢）
-      monteCarloResult.value = runMonteCarloSimulation(params.value)
+      const monteCarlo = await runMonteCarloSimulationOffMainThread(safeParams, {
+        onProgress: (progress) => {
+          if (runToken === currentRunToken.value) {
+            monteCarloProgress.value = Number.isFinite(progress)
+              ? Math.min(1, Math.max(0, progress))
+              : 0
+          }
+        },
+      })
+
+      if (runToken !== currentRunToken.value) {
+        return false
+      }
+
+      deterministicResult.value = deterministic
+      monteCarloResult.value = monteCarlo
 
       hasCalculated.value = true
+      monteCarloProgress.value = 1
       return true
     } catch (e) {
+      if (e instanceof MonteCarloCancelledError) {
+        errors.value = []
+        monteCarloProgress.value = 0
+        return false
+      }
       errors.value = [(e as Error).message]
+      monteCarloProgress.value = 0
       return false
     } finally {
-      isCalculating.value = false
+      if (runToken === currentRunToken.value) {
+        isCalculating.value = false
+      }
     }
   }
 
-  // 仅运行确定性计算（快速预览）
-  function runDeterministicOnly() {
-    errors.value = validateParams(params.value)
-    if (errors.value.length > 0) {
-      return false
-    }
-
-    deterministicResult.value = runDeterministicSimulation(params.value)
-    return true
+  function cancelSimulation() {
+    if (!isCalculating.value) return
+    currentRunToken.value++
+    cancelMonteCarloSimulation()
+    isCalculating.value = false
+    monteCarloProgress.value = 0
   }
 
   // 计算总投入本金
@@ -180,6 +223,7 @@ export const useInvestmentStore = defineStore('investment', () => {
     deterministicResult,
     monteCarloResult,
     isCalculating,
+    monteCarloProgress,
     errors,
     warnings,
     hasCalculated,
@@ -195,6 +239,6 @@ export const useInvestmentStore = defineStore('investment', () => {
     resetParams,
     applyPreset,
     runSimulation,
-    runDeterministicOnly,
+    cancelSimulation,
   }
 })

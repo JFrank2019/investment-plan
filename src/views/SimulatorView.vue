@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import { useInvestmentStore } from '@/stores/investment'
-import { Play, RefreshCw, AlertTriangle } from 'lucide-vue-next'
+import { Play, RefreshCw, AlertTriangle, Square } from 'lucide-vue-next'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 
 const ConfigPanel = defineAsyncComponent(() => import('@/components/config/ConfigPanel.vue'))
@@ -14,6 +14,13 @@ const AllocationChart = defineAsyncComponent(() => import('@/components/charts/A
 const store = useInvestmentStore()
 const activeTab = ref<'config' | 'results'>('config')
 const showResetConfirm = ref(false)
+const monteCarloProgressPercent = computed(() => {
+  const rawProgress = store.monteCarloProgress
+  if (!Number.isFinite(rawProgress)) {
+    return 0
+  }
+  return Math.round(Math.min(1, Math.max(0, rawProgress)) * 100)
+})
 
 async function handleRunSimulation() {
   const success = await store.runSimulation()
@@ -29,7 +36,10 @@ function handleResetClick() {
 function handleResetConfirm() {
   store.resetParams()
   activeTab.value = 'config'
-  showResetConfirm.value = false
+}
+
+function handleCancelSimulation() {
+  store.cancelSimulation()
 }
 </script>
 
@@ -64,7 +74,32 @@ function handleResetConfirm() {
             <RefreshCw v-else class="h-4 w-4 animate-spin" />
             <span class="hidden sm:ml-1.5 sm:inline">{{ store.isCalculating ? '计算中...' : '运行模拟' }}</span>
           </button>
+          <button
+            v-if="store.isCalculating"
+            @click="handleCancelSimulation"
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-700 text-white shadow-md transition-all hover:bg-zinc-800 active:scale-95 sm:h-9 sm:w-auto sm:px-3 sm:py-2 sm:text-sm dark:bg-zinc-600 dark:hover:bg-zinc-500"
+            title="取消计算"
+          >
+            <Square class="h-3.5 w-3.5 fill-current" />
+            <span class="hidden sm:ml-1.5 sm:inline">取消</span>
+          </button>
         </div>
+      </div>
+    </div>
+
+    <div
+      v-if="store.isCalculating"
+      class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-500/20 dark:bg-blue-500/10"
+    >
+      <div class="mb-1.5 flex items-center justify-between text-xs text-blue-700 dark:text-blue-300">
+        <span>蒙特卡洛计算进度</span>
+        <span>{{ monteCarloProgressPercent }}%</span>
+      </div>
+      <div class="h-2 overflow-hidden rounded-full bg-blue-100 dark:bg-blue-500/20">
+        <div
+          class="h-full bg-linear-to-r from-blue-500 to-blue-600 transition-[width] duration-150"
+          :style="{ width: `${monteCarloProgressPercent}%` }"
+        ></div>
       </div>
     </div>
 
@@ -78,7 +113,7 @@ function handleResetConfirm() {
         <div>
           <h3 class="text-sm font-medium text-amber-800 dark:text-amber-200">参数提醒</h3>
           <ul class="mt-1 list-inside list-disc text-sm text-amber-700 dark:text-amber-300">
-            <li v-for="warning in store.warnings" :key="warning">{{ warning }}</li>
+            <li v-for="(warning, index) in store.warnings" :key="`warning-${index}`">{{ warning }}</li>
           </ul>
         </div>
       </div>
@@ -94,7 +129,7 @@ function handleResetConfirm() {
         <div>
           <h3 class="text-sm font-medium text-red-800 dark:text-red-200">参数错误</h3>
           <ul class="mt-1 list-inside list-disc text-sm text-red-700 dark:text-red-300">
-            <li v-for="error in store.errors" :key="error">{{ error }}</li>
+            <li v-for="(error, index) in store.errors" :key="`error-${index}`">{{ error }}</li>
           </ul>
         </div>
       </div>

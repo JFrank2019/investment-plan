@@ -14,6 +14,13 @@ import {
 
 const store = useInvestmentStore()
 
+function formatRatio(value: number): string {
+  if (!Number.isFinite(value)) {
+    return '极高'
+  }
+  return value.toFixed(2)
+}
+
 const riskMetrics = computed(() => {
   if (!store.monteCarloResult?.statistics?.riskMetrics) return null
   return store.monteCarloResult.statistics.riskMetrics
@@ -27,7 +34,7 @@ const metrics = computed(() => {
   return [
     {
       title: '夏普比率',
-      value: rm.sharpeRatio.toFixed(2),
+      value: formatRatio(rm.sharpeRatio),
       description: '风险调整后收益',
       icon: Gauge,
       color: rm.sharpeRatio >= 1 ? 'text-emerald-600 dark:text-emerald-400' : rm.sharpeRatio >= 0.5 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400',
@@ -36,7 +43,7 @@ const metrics = computed(() => {
     },
     {
       title: '索提诺比率',
-      value: rm.sortinoRatio.toFixed(2),
+      value: formatRatio(rm.sortinoRatio),
       description: '下行风险调整后收益',
       icon: TrendingDown,
       color: rm.sortinoRatio >= 1 ? 'text-emerald-600 dark:text-emerald-400' : rm.sortinoRatio >= 0.5 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400',

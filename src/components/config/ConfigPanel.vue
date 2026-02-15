@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useInvestmentStore } from '@/stores/investment'
-import { formatMoney } from '@/engine'
+import { formatMoney, type SimulationParams } from '@/engine'
 import { Wallet, PiggyBank, TrendingUp, RefreshCw, Clock } from 'lucide-vue-next'
 import RangeSlider from './RangeSlider.vue'
 import PresetSelector from './PresetSelector.vue'
@@ -25,6 +25,66 @@ function updateInvestEquityRatio(value: number) {
 
 function updateRebalanceRatio(value: number) {
   store.updateParams({ rebalanceTargetEquityRatio: value / 100 })
+}
+
+function getNumericValue(event: Event): number {
+  const target = event.target
+  if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) {
+    return 0
+  }
+  return Number(target.value) || 0
+}
+
+function updateNumberParam<K extends keyof SimulationParams>(key: K, value: number) {
+  store.updateParams({ [key]: value } as Pick<SimulationParams, K>)
+}
+
+function updateCurrencyParam<K extends keyof SimulationParams>(key: K, event: Event) {
+  updateNumberParam(key, getNumericValue(event))
+}
+
+function updatePercentParam<K extends keyof SimulationParams>(key: K, event: Event) {
+  updateNumberParam(key, getNumericValue(event) / 100)
+}
+
+function handleInitialCapitalChange(event: Event) {
+  updateCurrencyParam('initialCapital', event)
+}
+
+function handleWeeklyInvestmentChange(event: Event) {
+  updateCurrencyParam('weeklyInvestment', event)
+}
+
+function handleEquityReturnChange(event: Event) {
+  updatePercentParam('equityReturn', event)
+}
+
+function handleEquityVolatilityChange(event: Event) {
+  updatePercentParam('equityVolatility', event)
+}
+
+function handleBondReturnChange(event: Event) {
+  updatePercentParam('bondReturn', event)
+}
+
+function handleBondVolatilityChange(event: Event) {
+  updatePercentParam('bondVolatility', event)
+}
+
+function handleRebalancePeriodChange(event: Event) {
+  updateNumberParam('rebalancePeriod', getNumericValue(event))
+}
+
+function handleSimulationMonthsChange(event: Event) {
+  updateNumberParam('simulationMonths', getNumericValue(event))
+}
+
+function handleMonteCarloPathCountChange(event: Event) {
+  updateNumberParam('monteCarloPathCount', getNumericValue(event))
+}
+
+function handleInflationRateChange(event: Event) {
+  updatePercentParam('inflationRate', event)
 }
 </script>
 
@@ -54,7 +114,7 @@ function updateRebalanceRatio(value: number) {
             <input
               type="number"
               :value="store.params.initialCapital"
-              @change="store.updateParams({ initialCapital: Number(($event.target as HTMLInputElement).value) || 0 })"
+              @input="handleInitialCapitalChange"
               class="money-text input-field pr-10 text-sm sm:pr-12"
               min="0"
               step="10000"
@@ -110,7 +170,7 @@ function updateRebalanceRatio(value: number) {
             <input
               type="number"
               :value="store.params.weeklyInvestment"
-              @change="store.updateParams({ weeklyInvestment: Number(($event.target as HTMLInputElement).value) || 0 })"
+              @input="handleWeeklyInvestmentChange"
               class="money-text input-field pr-12 text-sm"
               min="0"
               step="100"
@@ -167,7 +227,7 @@ function updateRebalanceRatio(value: number) {
               <input
                 type="number"
                 :value="(store.params.equityReturn * 100).toFixed(1)"
-                @change="store.updateParams({ equityReturn: (Number(($event.target as HTMLInputElement).value) || 0) / 100 })"
+                @input="handleEquityReturnChange"
                 class="input-field pr-6 text-sm sm:pr-8"
                 step="0.5"
               />
@@ -186,7 +246,7 @@ function updateRebalanceRatio(value: number) {
               <input
                 type="number"
                 :value="(store.params.equityVolatility * 100).toFixed(1)"
-                @change="store.updateParams({ equityVolatility: (Number(($event.target as HTMLInputElement).value) || 0) / 100 })"
+                @input="handleEquityVolatilityChange"
                 class="input-field pr-6 text-sm sm:pr-8"
                 step="1"
               />
@@ -208,7 +268,7 @@ function updateRebalanceRatio(value: number) {
               <input
                 type="number"
                 :value="(store.params.bondReturn * 100).toFixed(1)"
-                @change="store.updateParams({ bondReturn: (Number(($event.target as HTMLInputElement).value) || 0) / 100 })"
+                @input="handleBondReturnChange"
                 class="input-field pr-6 text-sm sm:pr-8"
                 step="0.5"
               />
@@ -227,7 +287,7 @@ function updateRebalanceRatio(value: number) {
               <input
                 type="number"
                 :value="(store.params.bondVolatility * 100).toFixed(1)"
-                @change="store.updateParams({ bondVolatility: (Number(($event.target as HTMLInputElement).value) || 0) / 100 })"
+                @input="handleBondVolatilityChange"
                 class="input-field pr-6 text-sm sm:pr-8"
                 step="0.5"
               />
@@ -261,7 +321,7 @@ function updateRebalanceRatio(value: number) {
             </label>
             <select
               :value="store.params.rebalancePeriod"
-              @change="store.updateParams({ rebalancePeriod: Number(($event.target as HTMLSelectElement).value) })"
+              @change="handleRebalancePeriodChange"
               class="input-field text-sm"
             >
               <option :value="0">不再平衡</option>
@@ -278,7 +338,7 @@ function updateRebalanceRatio(value: number) {
               <input
                 type="number"
                 :value="(store.params.rebalanceTargetEquityRatio * 100).toFixed(0)"
-                @change="updateRebalanceRatio(Number(($event.target as HTMLInputElement).value) || 0)"
+                @input="updateRebalanceRatio(Number(($event.target as HTMLInputElement).value) || 0)"
                 class="input-field pr-6 text-sm sm:pr-8"
                 min="0"
                 max="100"
@@ -301,7 +361,7 @@ function updateRebalanceRatio(value: number) {
             </label>
             <select
               :value="store.params.simulationMonths"
-              @change="store.updateParams({ simulationMonths: Number(($event.target as HTMLSelectElement).value) })"
+              @change="handleSimulationMonthsChange"
               class="input-field text-sm"
             >
               <option :value="6">6个月</option>
@@ -318,7 +378,7 @@ function updateRebalanceRatio(value: number) {
             </label>
             <select
               :value="store.params.monteCarloPathCount"
-              @change="store.updateParams({ monteCarloPathCount: Number(($event.target as HTMLSelectElement).value) })"
+              @change="handleMonteCarloPathCountChange"
               class="input-field text-sm"
             >
               <option :value="100">100条（快速）</option>
@@ -337,7 +397,7 @@ function updateRebalanceRatio(value: number) {
             <input
               type="number"
               :value="(store.params.inflationRate * 100).toFixed(1)"
-              @change="store.updateParams({ inflationRate: (Number(($event.target as HTMLInputElement).value) || 0) / 100 })"
+              @input="handleInflationRateChange"
               class="input-field pr-6 text-sm sm:pr-8"
               step="0.1"
               min="0"

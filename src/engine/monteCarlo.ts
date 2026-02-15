@@ -10,7 +10,16 @@ import {
   weeklyToMonthlyInvestment,
   calculateMaxDrawdown,
 } from './deterministic'
-import { calculateStatistics, calculateCumulativeInflation } from './statistics'
+import { calculateStatistics, annualToMonthlyInflation } from './statistics'
+
+export interface MonteCarloRunOptions {
+  onProgress?: (completed: number, total: number) => void
+}
+
+export interface MonteCarloBatchedRunOptions extends MonteCarloRunOptions {
+  chunkSize?: number
+  yieldIntervalMs?: number
+}
 
 /**
  * Box-Muller 变换生成标准正态分布随机数
@@ -41,12 +50,21 @@ export function convertToMonthlyParams(annualReturn: number, annualVolatility: n
   return { monthlyReturn, monthlyVolatility }
 }
 
+interface MonthlyAssetParams {
+  monthlyReturn: number
+  monthlyVolatility: number
+}
+
+interface MonteCarloPrecomputed {
+  equityMonthly: MonthlyAssetParams
+  bondMonthly: MonthlyAssetParams
+  cumulativeInflationByMonth: number[]
+}
+
 /**
  * 执行单条蒙特卡洛模拟路径
  */
-function simulateSinglePath(params: SimulationParams): SimulationPath {
-  const equityMonthly = convertToMonthlyParams(params.equityReturn, params.equityVolatility)
-  const bondMonthly = convertToMonthlyParams(params.bondReturn, params.bondVolatility)
+function simulateSinglePath(params: SimulationParams, precomputed: MonteCarloPrecomputed): SimulationPath {
   const monthlyInvestment = weeklyToMonthlyInvestment(params.weeklyInvestment)
   const monthlyEquityInvest = monthlyInvestment * params.investEquityRatio
   const monthlyBondInvest = monthlyInvestment * (1 - params.investEquityRatio)
@@ -66,7 +84,7 @@ function simulateSinglePath(params: SimulationParams): SimulationPath {
       equityAsset,
       bondAsset,
       cumulativeInvestment,
-      params.inflationRate,
+      precomputed.cumulativeInflationByMonth[0] ?? 0,
       realCumulativeInvestment,
     ),
   )
@@ -75,12 +93,12 @@ function simulateSinglePath(params: SimulationParams): SimulationPath {
   for (let month = 1; month <= params.simulationMonths; month++) {
     // 生成随机月收益率
     const equityReturn = randomNormalWithParams(
-      equityMonthly.monthlyReturn,
-      equityMonthly.monthlyVolatility,
+      precomputed.equityMonthly.monthlyReturn,
+      precomputed.equityMonthly.monthlyVolatility,
     )
     const bondReturn = randomNormalWithParams(
-      bondMonthly.monthlyReturn,
-      bondMonthly.monthlyVolatility,
+      precomputed.bondMonthly.monthlyReturn,
+      precomputed.bondMonthly.monthlyVolatility,
     )
 
     // 应用收益（使用对数收益转换）
@@ -95,7 +113,7 @@ function simulateSinglePath(params: SimulationParams): SimulationPath {
     equityAsset += monthlyEquityInvest
     bondAsset += monthlyBondInvest
     cumulativeInvestment += monthlyInvestment
-    const contributionDeflator = 1 + calculateCumulativeInflation(params.inflationRate, month)
+    const contributionDeflator = 1 + (precomputed.cumulativeInflationByMonth[month] ?? 0)
     realCumulativeInvestment +=
       contributionDeflator > 0 ? monthlyInvestment / contributionDeflator : monthlyInvestment
 
@@ -112,7 +130,7 @@ function simulateSinglePath(params: SimulationParams): SimulationPath {
         equityAsset,
         bondAsset,
         cumulativeInvestment,
-        params.inflationRate,
+        precomputed.cumulativeInflationByMonth[month] ?? 0,
         realCumulativeInvestment,
       ),
     )
@@ -137,15 +155,14 @@ function createAssetState(
   equityAsset: number,
   bondAsset: number,
   cumulativeInvestment: number,
-  annualInflationRate: number,
+  cumulativeInflation: number,
   realCumulativeInvestment: number,
 ): AssetState {
   const totalAsset = equityAsset + bondAsset
   const profit = totalAsset - cumulativeInvestment
   const profitRate = cumulativeInvestment > 0 ? profit / cumulativeInvestment : 0
 
-  // 计算通胀调整后的实际值
-  const cumulativeInflation = calculateCumulativeInflation(annualInflationRate, month)
+  // 使用预计算的通胀值，避免在热路径重复指数运算
   const realTotalAsset = totalAsset / (1 + cumulativeInflation)
   const realProfit = realTotalAsset - realCumulativeInvestment
   const realProfitRate =
@@ -173,16 +190,82 @@ function createAssetState(
 export function runMonteCarloSimulation(
   params: SimulationParams,
   riskFreeRate: number = 0.03,
+  options: MonteCarloRunOptions = {},
 ): MonteCarloResult {
+  const precomputed: MonteCarloPrecomputed = {
+    equityMonthly: convertToMonthlyParams(params.equityReturn, params.equityVolatility),
+    bondMonthly: convertToMonthlyParams(params.bondReturn, params.bondVolatility),
+    cumulativeInflationByMonth: buildCumulativeInflationTable(params.inflationRate, params.simulationMonths),
+  }
   const paths: SimulationPath[] = []
+  const total = params.monteCarloPathCount
+  const reportInterval = Math.max(1, Math.floor(total / 100))
 
   // 生成所有模拟路径
-  for (let i = 0; i < params.monteCarloPathCount; i++) {
-    paths.push(simulateSinglePath(params))
+  for (let i = 0; i < total; i++) {
+    paths.push(simulateSinglePath(params, precomputed))
+    const completed = i + 1
+    if (options.onProgress && (completed % reportInterval === 0 || completed === total)) {
+      options.onProgress(completed, total)
+    }
   }
 
   // 计算置信区间时间序列
-  const confidenceBands = calculateConfidenceBands(paths, params.simulationMonths)
+  return buildMonteCarloResult(paths, params.simulationMonths, riskFreeRate)
+}
+
+/**
+ * 批量执行蒙特卡洛模拟（用于 Worker 内分批让出执行权，避免进度卡死）
+ */
+export async function runMonteCarloSimulationBatched(
+  params: SimulationParams,
+  riskFreeRate: number = 0.03,
+  options: MonteCarloBatchedRunOptions = {},
+): Promise<MonteCarloResult> {
+  const precomputed: MonteCarloPrecomputed = {
+    equityMonthly: convertToMonthlyParams(params.equityReturn, params.equityVolatility),
+    bondMonthly: convertToMonthlyParams(params.bondReturn, params.bondVolatility),
+    cumulativeInflationByMonth: buildCumulativeInflationTable(params.inflationRate, params.simulationMonths),
+  }
+  const paths: SimulationPath[] = []
+  const total = params.monteCarloPathCount
+  const progressInterval = Math.max(1, Math.floor(total / 100))
+  const checkInterval = Math.max(32, Math.min(total, options.chunkSize ?? 256))
+  const yieldIntervalMs = Math.max(16, options.yieldIntervalMs ?? 48)
+  const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now())
+  let lastYieldAt = now()
+  let nextProgressAt = progressInterval
+
+  for (let i = 0; i < total; i++) {
+    paths.push(simulateSinglePath(params, precomputed))
+    const completed = i + 1
+
+    if (completed >= nextProgressAt || completed === total) {
+      options.onProgress?.(completed, total)
+      while (nextProgressAt <= completed) {
+        nextProgressAt += progressInterval
+      }
+    }
+
+    if (completed % checkInterval === 0 || completed === total) {
+      const current = now()
+      if (completed < total && current - lastYieldAt >= yieldIntervalMs) {
+        await new Promise<void>((resolve) => setTimeout(resolve, 0))
+        lastYieldAt = now()
+      }
+    }
+  }
+
+  return buildMonteCarloResult(paths, params.simulationMonths, riskFreeRate)
+}
+
+function buildMonteCarloResult(
+  paths: SimulationPath[],
+  simulationMonths: number,
+  riskFreeRate: number,
+): MonteCarloResult {
+  // 计算置信区间时间序列
+  const confidenceBands = calculateConfidenceBands(paths, simulationMonths)
 
   // 计算统计数据
   const statistics = calculateStatistics(paths, confidenceBands, riskFreeRate)
@@ -198,12 +281,22 @@ export function runMonteCarloSimulation(
  */
 function calculateConfidenceBands(paths: SimulationPath[], months: number): ConfidenceBand[] {
   const bands: ConfidenceBand[] = []
+  const pathCount = paths.length
 
   for (let month = 0; month <= months; month++) {
     // 收集该月所有路径的总资产值
-    const values = paths.map((p) => p.states[month]?.totalAsset ?? 0).sort((a, b) => a - b)
+    const values = new Array<number>(pathCount)
     // 收集该月所有路径的实际购买力值
-    const realValues = paths.map((p) => p.states[month]?.realTotalAsset ?? 0).sort((a, b) => a - b)
+    const realValues = new Array<number>(pathCount)
+
+    for (let i = 0; i < pathCount; i++) {
+      const state = paths[i]?.states[month]
+      values[i] = state?.totalAsset ?? 0
+      realValues[i] = state?.realTotalAsset ?? 0
+    }
+
+    values.sort((a, b) => a - b)
+    realValues.sort((a, b) => a - b)
 
     bands.push({
       month,
@@ -233,4 +326,17 @@ function percentile(sortedArr: number[], p: number): number {
   const upperVal = sortedArr[upper] ?? 0
   if (lower === upper) return lowerVal
   return lowerVal * (upper - index) + upperVal * (index - lower)
+}
+
+function buildCumulativeInflationTable(annualInflationRate: number, months: number): number[] {
+  const monthlyInflation = annualToMonthlyInflation(annualInflationRate)
+  const table = new Array<number>(months + 1).fill(0)
+  let inflationFactor = 1
+
+  for (let month = 1; month <= months; month++) {
+    inflationFactor *= 1 + monthlyInflation
+    table[month] = inflationFactor - 1
+  }
+
+  return table
 }

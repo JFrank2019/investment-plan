@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useEventListener } from '@vueuse/core'
 
 interface Props {
   modelValue: number
@@ -58,27 +59,19 @@ const updateValue = (e: MouseEvent | TouchEvent) => {
   const percentage = Math.max(0, Math.min(1, x / rect.width))
   const range = props.max - props.min
   const rawValue = props.min + percentage * range
-  const steppedValue = Math.round(rawValue / props.step) * props.step
+  const steppedValue = Math.round((rawValue - props.min) / props.step) * props.step + props.min
   const clampedValue = Math.max(props.min, Math.min(props.max, steppedValue))
 
   currentValue.value = clampedValue
   emit('update:modelValue', clampedValue)
 }
 
-onMounted(() => {
-  currentValue.value = props.modelValue
-  window.addEventListener('mousemove', handleMove)
-  window.addEventListener('mouseup', handleEnd)
-  window.addEventListener('touchmove', handleMove, { passive: false })
-  window.addEventListener('touchend', handleEnd)
-})
+currentValue.value = props.modelValue
 
-onUnmounted(() => {
-  window.removeEventListener('mousemove', handleMove)
-  window.removeEventListener('mouseup', handleEnd)
-  window.removeEventListener('touchmove', handleMove)
-  window.removeEventListener('touchend', handleEnd)
-})
+useEventListener(window, 'mousemove', handleMove)
+useEventListener(window, 'mouseup', handleEnd)
+useEventListener(window, 'touchmove', handleMove, { passive: false })
+useEventListener(window, 'touchend', handleEnd)
 
 // 监听外部值变化
 const updateFromProps = () => {

@@ -33,7 +33,6 @@ export {
   calculateStatistics,
   formatMoney,
   formatPercent,
-  formatMoneyFull,
   annualToMonthlyInflation,
   calculateCumulativeInflation,
   calculateRealValue,

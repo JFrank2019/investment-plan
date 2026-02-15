@@ -1,5 +1,5 @@
 import type { SimulationParams, AssetState, DeterministicResult, SimulationPath } from './types'
-import { calculateCumulativeInflation } from './statistics'
+import { annualToMonthlyInflation } from './statistics'
 
 /**
  * 将年化收益率转换为月收益率（复利）
@@ -51,6 +51,10 @@ export function runDeterministicSimulation(params: SimulationParams): Determinis
   const monthlyInvestment = weeklyToMonthlyInvestment(params.weeklyInvestment)
   const monthlyEquityInvest = monthlyInvestment * params.investEquityRatio
   const monthlyBondInvest = monthlyInvestment * (1 - params.investEquityRatio)
+  const cumulativeInflationByMonth = buildCumulativeInflationTable(
+    params.inflationRate,
+    params.simulationMonths,
+  )
 
   // 初始状态
   let equityAsset = params.initialCapital * params.initialEquityRatio
@@ -67,7 +71,7 @@ export function runDeterministicSimulation(params: SimulationParams): Determinis
       equityAsset,
       bondAsset,
       cumulativeInvestment,
-      params.inflationRate,
+      cumulativeInflationByMonth[0] ?? 0,
       realCumulativeInvestment,
     ),
   )
@@ -84,7 +88,7 @@ export function runDeterministicSimulation(params: SimulationParams): Determinis
     equityAsset += monthlyEquityInvest
     bondAsset += monthlyBondInvest
     cumulativeInvestment += monthlyInvestment
-    const contributionDeflator = 1 + calculateCumulativeInflation(params.inflationRate, month)
+    const contributionDeflator = 1 + (cumulativeInflationByMonth[month] ?? 0)
     realCumulativeInvestment +=
       contributionDeflator > 0 ? monthlyInvestment / contributionDeflator : monthlyInvestment
 
@@ -102,7 +106,7 @@ export function runDeterministicSimulation(params: SimulationParams): Determinis
         equityAsset,
         bondAsset,
         cumulativeInvestment,
-        params.inflationRate,
+        cumulativeInflationByMonth[month] ?? 0,
         realCumulativeInvestment,
       ),
     )
@@ -135,15 +139,14 @@ function createAssetState(
   equityAsset: number,
   bondAsset: number,
   cumulativeInvestment: number,
-  annualInflationRate: number,
+  cumulativeInflation: number,
   realCumulativeInvestment: number,
 ): AssetState {
   const totalAsset = equityAsset + bondAsset
   const profit = totalAsset - cumulativeInvestment
   const profitRate = cumulativeInvestment > 0 ? profit / cumulativeInvestment : 0
 
-  // 计算通胀调整后的实际值
-  const cumulativeInflation = calculateCumulativeInflation(annualInflationRate, month)
+  // 使用预计算的通胀值，避免在热路径重复指数运算
   const realTotalAsset = totalAsset / (1 + cumulativeInflation)
   const realProfit = realTotalAsset - realCumulativeInvestment
   const realProfitRate =
@@ -163,6 +166,19 @@ function createAssetState(
     realProfit,
     realProfitRate,
   }
+}
+
+function buildCumulativeInflationTable(annualInflationRate: number, months: number): number[] {
+  const monthlyInflation = annualToMonthlyInflation(annualInflationRate)
+  const table = new Array<number>(months + 1).fill(0)
+  let inflationFactor = 1
+
+  for (let month = 1; month <= months; month++) {
+    inflationFactor *= 1 + monthlyInflation
+    table[month] = inflationFactor - 1
+  }
+
+  return table
 }
 
 /**
