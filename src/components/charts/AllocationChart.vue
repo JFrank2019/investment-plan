@@ -26,61 +26,70 @@ const chartOption = computed(() => {
   const equityRatios = states.map((s) => (s.equityRatio * 100).toFixed(1))
   const bondRatios = states.map((s) => ((1 - s.equityRatio) * 100).toFixed(1))
 
-  const textColor = isDark.value ? '#a1a1aa' : '#71717a'
-  const lineColor = isDark.value ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+  // Theme Colors (Slate / Financial Navy)
+  const textColor = isDark.value ? '#94a3b8' : '#64748b'
+  const axisLineColor = isDark.value ? '#334155' : '#e2e8f0'
+  const splitLineColor = isDark.value ? '#1e293b' : '#f1f5f9'
+  const tooltipBg = isDark.value ? '#0f172a' : '#ffffff'
+  const tooltipBorder = isDark.value ? '#1e293b' : '#e2e8f0'
 
   return {
     backgroundColor: 'transparent',
     title: {
       text: '股债配置比例变化',
-      left: 'center',
+      left: 'left',
       textStyle: {
-        color: isDark.value ? '#fff' : '#18181b',
-        fontSize: 16,
+        color: isDark.value ? '#f8fafc' : '#0f172a',
+        fontSize: 14,
         fontWeight: 600,
       },
     },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: isDark.value ? '#27272a' : '#fff',
-      borderColor: isDark.value ? '#3f3f46' : '#e4e4e7',
+      backgroundColor: tooltipBg,
+      borderColor: tooltipBorder,
       textStyle: {
-        color: isDark.value ? '#fff' : '#18181b',
+        color: isDark.value ? '#f8fafc' : '#0f172a',
       },
       formatter: (params: { seriesName: string; value: string; axisValue: string }[]) => {
         const month = params[0]?.axisValue ?? ''
-        let html = `<div class="font-medium">${escapeHtml(month)}</div>`
+        let html = `<div class="font-medium mb-2 border-b border-zinc-100 dark:border-zinc-800 pb-1">${escapeHtml(month)}</div>`
         params.forEach((p) => {
-          html += `<div class="flex justify-between gap-4"><span>${escapeHtml(p.seriesName)}</span><span class="font-medium">${escapeHtml(`${p.value}`)}%</span></div>`
+          html += `<div class="flex justify-between gap-4 text-xs mb-1"><span>${escapeHtml(p.seriesName)}</span><span class="font-medium font-mono">${escapeHtml(`${p.value}`)}%</span></div>`
         })
         return html
       },
     },
     legend: {
       bottom: 0,
-      textStyle: { color: textColor },
+      icon: 'circle',
+      itemWidth: 8,
+      itemHeight: 8,
+      textStyle: { color: textColor, fontSize: 12 },
     },
     grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '15%',
+      left: '0%',
+      right: '2%',
+      bottom: '10%',
       top: '15%',
       containLabel: true,
     },
     xAxis: {
       type: 'category',
       data: months,
-      axisLine: { lineStyle: { color: lineColor } },
-      axisLabel: { color: textColor },
+      axisLine: { lineStyle: { color: axisLineColor } },
+      axisLabel: { color: textColor, fontSize: 11 },
+      axisTick: { show: false },
     },
     yAxis: {
       type: 'value',
       min: 0,
       max: 100,
       axisLine: { show: false },
-      splitLine: { lineStyle: { color: lineColor } },
+      splitLine: { lineStyle: { color: splitLineColor } },
       axisLabel: {
         color: textColor,
+        fontSize: 11,
         formatter: '{value}%',
       },
     },
@@ -102,11 +111,10 @@ const chartOption = computed(() => {
             ],
           },
         },
-        lineStyle: { width: 2, color: '#3b82f6' },
+        lineStyle: { width: 0 },
         itemStyle: { color: '#3b82f6' },
         data: equityRatios,
-        symbol: 'circle',
-        symbolSize: 6,
+        symbol: 'none',
       },
       {
         name: '偏债比例',
@@ -120,16 +128,15 @@ const chartOption = computed(() => {
             x2: 0,
             y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(34, 197, 94, 0.8)' },
-              { offset: 1, color: 'rgba(34, 197, 94, 0.3)' },
+              { offset: 0, color: 'rgba(16, 185, 129, 0.8)' },
+              { offset: 1, color: 'rgba(16, 185, 129, 0.3)' },
             ],
           },
         },
-        lineStyle: { width: 2, color: '#22c55e' },
-        itemStyle: { color: '#22c55e' },
+        lineStyle: { width: 0 },
+        itemStyle: { color: '#10b981' },
         data: bondRatios,
-        symbol: 'circle',
-        symbolSize: 6,
+        symbol: 'none',
       },
     ],
   }
@@ -137,7 +144,5 @@ const chartOption = computed(() => {
 </script>
 
 <template>
-  <div class="glass-card p-4 sm:p-6">
-    <VChart :option="chartOption" autoresize style="height: 300px" />
-  </div>
+  <VChart :option="chartOption" autoresize style="height: 100%; min-height: 300px;" />
 </template>

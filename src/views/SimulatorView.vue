@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, ref } from 'vue'
 import { useInvestmentStore } from '@/stores/investment'
-import { Play, RefreshCw, AlertTriangle, Square } from 'lucide-vue-next'
+import { Play, RefreshCw, AlertTriangle, Square, Settings2, BarChart2 } from 'lucide-vue-next'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 
 const ConfigPanel = defineAsyncComponent(() => import('@/components/config/ConfigPanel.vue'))
@@ -44,75 +44,68 @@ function handleCancelSimulation() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-7xl px-3 py-3 sm:px-6 sm:py-6 lg:px-8">
+  <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
     <!-- Header -->
-    <div class="mb-3 sm:mb-6">
-      <div class="flex items-center justify-between gap-2">
-        <div class="min-w-0 flex-1">
-          <h1 class="text-base font-bold text-zinc-900 sm:text-xl lg:text-2xl dark:text-white">投资收益模拟器</h1>
-          <p class="mt-0.5 hidden text-sm text-zinc-600 sm:block dark:text-zinc-400">
-            配置参数，运行模拟，查看投资收益预测
-          </p>
-        </div>
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">投资收益模拟器</h1>
+        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          基于蒙特卡洛模拟的长期资产配置预测工具
+        </p>
+      </div>
 
-        <div class="flex items-center gap-2">
-          <button
-            @click="handleResetClick"
-            class="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 sm:h-9 sm:w-auto sm:px-3 sm:py-2 sm:text-sm dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-200"
-            title="重置"
-          >
-            <RefreshCw class="h-4 w-4" />
-            <span class="hidden sm:ml-1.5 sm:inline">重置</span>
-          </button>
-          <button
-            @click="handleRunSimulation"
-            :disabled="store.isCalculating"
-            class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500 text-white shadow-md shadow-blue-500/25 transition-all hover:bg-blue-600 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed sm:h-9 sm:w-auto sm:rounded-lg sm:bg-linear-to-r sm:from-blue-500 sm:to-blue-600 sm:px-4 sm:py-2 sm:text-sm sm:hover:from-blue-600 sm:hover:to-blue-700"
-            :title="store.isCalculating ? '计算中...' : '运行模拟'"
-          >
-            <Play v-if="!store.isCalculating" class="h-4 w-4" />
-            <RefreshCw v-else class="h-4 w-4 animate-spin" />
-            <span class="hidden sm:ml-1.5 sm:inline">{{ store.isCalculating ? '计算中...' : '运行模拟' }}</span>
-          </button>
-          <button
-            v-if="store.isCalculating"
-            @click="handleCancelSimulation"
-            class="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-700 text-white shadow-md transition-all hover:bg-zinc-800 active:scale-95 sm:h-9 sm:w-auto sm:px-3 sm:py-2 sm:text-sm dark:bg-zinc-600 dark:hover:bg-zinc-500"
-            title="取消计算"
-          >
-            <Square class="h-3.5 w-3.5 fill-current" />
-            <span class="hidden sm:ml-1.5 sm:inline">取消</span>
-          </button>
-        </div>
+      <div class="flex items-center gap-3">
+        <button
+          @click="handleResetClick"
+          class="btn-secondary"
+          title="重置参数"
+        >
+          <RefreshCw class="h-4 w-4" />
+          <span class="hidden sm:inline">重置</span>
+        </button>
+        
+        <button
+          v-if="store.isCalculating"
+          @click="handleCancelSimulation"
+          class="btn-danger"
+        >
+          <Square class="h-3.5 w-3.5 fill-current" />
+          <span>取消</span>
+        </button>
+
+        <button
+          @click="handleRunSimulation"
+          :disabled="store.isCalculating"
+          class="btn-primary"
+        >
+          <RefreshCw v-if="store.isCalculating" class="h-4 w-4 animate-spin" />
+          <Play v-else class="h-4 w-4 fill-current" />
+          <span>{{ store.isCalculating ? '计算中...' : '运行模拟' }}</span>
+        </button>
       </div>
     </div>
 
+    <!-- Progress Bar -->
     <div
       v-if="store.isCalculating"
-      class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-500/20 dark:bg-blue-500/10"
+      class="mb-6 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800"
     >
-      <div class="mb-1.5 flex items-center justify-between text-xs text-blue-700 dark:text-blue-300">
-        <span>蒙特卡洛计算进度</span>
-        <span>{{ monteCarloProgressPercent }}%</span>
-      </div>
-      <div class="h-2 overflow-hidden rounded-full bg-blue-100 dark:bg-blue-500/20">
-        <div
-          class="h-full bg-linear-to-r from-blue-500 to-blue-600 transition-[width] duration-150"
-          :style="{ width: `${monteCarloProgressPercent}%` }"
-        ></div>
-      </div>
+      <div
+        class="h-1 bg-zinc-900 transition-all duration-300 dark:bg-zinc-100"
+        :style="{ width: `${monteCarloProgressPercent}%` }"
+      ></div>
     </div>
 
     <!-- Warnings -->
     <div
       v-if="store.warnings.length > 0"
-      class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/10"
+      class="mb-6 rounded-sm border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/30 dark:bg-amber-900/10"
     >
       <div class="flex items-start gap-3">
-        <AlertTriangle class="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+        <AlertTriangle class="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-500" />
         <div>
-          <h3 class="text-sm font-medium text-amber-800 dark:text-amber-200">参数提醒</h3>
-          <ul class="mt-1 list-inside list-disc text-sm text-amber-700 dark:text-amber-300">
+          <h3 class="text-sm font-medium text-amber-900 dark:text-amber-200">参数提醒</h3>
+          <ul class="mt-1 list-inside list-disc text-sm text-amber-800 dark:text-amber-300">
             <li v-for="(warning, index) in store.warnings" :key="`warning-${index}`">{{ warning }}</li>
           </ul>
         </div>
@@ -122,13 +115,13 @@ function handleCancelSimulation() {
     <!-- Errors -->
     <div
       v-if="store.errors.length > 0"
-      class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-500/20 dark:bg-red-500/10"
+      class="mb-6 rounded-sm border border-red-200 bg-red-50 p-4 dark:border-red-900/30 dark:bg-red-900/10"
     >
       <div class="flex items-start gap-3">
-        <AlertTriangle class="h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+        <AlertTriangle class="h-5 w-5 shrink-0 text-red-600 dark:text-red-500" />
         <div>
-          <h3 class="text-sm font-medium text-red-800 dark:text-red-200">参数错误</h3>
-          <ul class="mt-1 list-inside list-disc text-sm text-red-700 dark:text-red-300">
+          <h3 class="text-sm font-medium text-red-900 dark:text-red-200">参数错误</h3>
+          <ul class="mt-1 list-inside list-disc text-sm text-red-800 dark:text-red-300">
             <li v-for="(error, index) in store.errors" :key="`error-${index}`">{{ error }}</li>
           </ul>
         </div>
@@ -136,31 +129,35 @@ function handleCancelSimulation() {
     </div>
 
     <!-- Tabs -->
-    <div class="mb-3 flex gap-1 rounded-xl bg-zinc-100 p-1 sm:mb-5 dark:bg-white/5">
-      <button
-        @click="activeTab = 'config'"
-        class="flex-1 rounded-lg px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2.5 sm:text-sm"
-        :class="[
-          activeTab === 'config'
-            ? 'bg-white text-blue-600 shadow-sm dark:bg-white/10 dark:text-blue-400'
-            : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white',
-        ]"
-      >
-        参数配置
-      </button>
-      <button
-        @click="activeTab = 'results'"
-        :disabled="!store.hasCalculated"
-        class="flex-1 rounded-lg px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2.5 sm:text-sm"
-        :class="[
-          activeTab === 'results'
-            ? 'bg-white text-blue-600 shadow-sm dark:bg-white/10 dark:text-blue-400'
-            : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white',
-          !store.hasCalculated && 'cursor-not-allowed opacity-50',
-        ]"
-      >
-        模拟结果
-      </button>
+    <div class="mb-6 border-b border-zinc-200 dark:border-zinc-800">
+      <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+        <button
+          @click="activeTab = 'config'"
+          :class="[
+            activeTab === 'config'
+              ? 'border-zinc-900 text-zinc-900 dark:border-white dark:text-white'
+              : 'border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:text-zinc-300',
+            'group flex items-center border-b-2 py-4 px-1 text-sm font-medium transition-colors'
+          ]"
+        >
+          <Settings2 class="mr-2 h-4 w-4" />
+          参数配置
+        </button>
+        <button
+          @click="activeTab = 'results'"
+          :disabled="!store.hasCalculated"
+          :class="[
+            activeTab === 'results'
+              ? 'border-zinc-900 text-zinc-900 dark:border-white dark:text-white'
+              : 'border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:text-zinc-300',
+            !store.hasCalculated ? 'cursor-not-allowed opacity-50' : '',
+            'group flex items-center border-b-2 py-4 px-1 text-sm font-medium transition-colors'
+          ]"
+        >
+          <BarChart2 class="mr-2 h-4 w-4" />
+          模拟结果
+        </button>
+      </nav>
     </div>
 
     <!-- Content -->
@@ -170,32 +167,26 @@ function handleCancelSimulation() {
           <ConfigPanel />
         </template>
         <template #fallback>
-          <div class="space-y-3 sm:space-y-6">
-            <div class="glass-card h-24 animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
-            <div class="grid gap-3 sm:gap-6 lg:grid-cols-2">
-              <div class="glass-card h-72 animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
-              <div class="glass-card h-72 animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
-              <div class="glass-card h-72 animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
-              <div class="glass-card h-72 animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
+          <div class="space-y-6">
+            <div class="h-24 animate-pulse bg-zinc-100 dark:bg-zinc-800"></div>
+            <div class="grid gap-6 lg:grid-cols-2">
+              <div class="h-72 animate-pulse bg-zinc-100 dark:bg-zinc-800"></div>
+              <div class="h-72 animate-pulse bg-zinc-100 dark:bg-zinc-800"></div>
             </div>
           </div>
         </template>
       </Suspense>
     </div>
 
-    <div v-else-if="activeTab === 'results' && store.hasCalculated" class="space-y-6">
+    <div v-else-if="activeTab === 'results' && store.hasCalculated" class="space-y-8">
       <!-- Stats Cards -->
       <Suspense>
         <template #default>
           <StatsCards />
         </template>
         <template #fallback>
-          <div class="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
-            <div
-              v-for="idx in 8"
-              :key="`stats-skeleton-${idx}`"
-              class="glass-card h-28 animate-pulse bg-zinc-100 dark:bg-zinc-800/60"
-            ></div>
+          <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div v-for="idx in 4" :key="idx" class="h-28 animate-pulse bg-zinc-100 dark:bg-zinc-800"></div>
           </div>
         </template>
       </Suspense>
@@ -206,32 +197,38 @@ function handleCancelSimulation() {
           <RiskMetricsCard />
         </template>
         <template #fallback>
-          <div class="glass-card h-64 animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
+          <div class="h-64 animate-pulse bg-zinc-100 dark:bg-zinc-800"></div>
         </template>
       </Suspense>
 
       <!-- Charts -->
       <Suspense>
         <template #default>
-          <div class="grid gap-6 lg:grid-cols-2">
-            <AssetGrowthChart />
-            <DistributionChart />
+          <div class="grid gap-8 lg:grid-cols-2">
+            <div class="data-panel p-4">
+              <AssetGrowthChart />
+            </div>
+            <div class="data-panel p-4">
+              <DistributionChart />
+            </div>
           </div>
         </template>
         <template #fallback>
-          <div class="grid gap-6 lg:grid-cols-2">
-            <div class="glass-card h-[432px] animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
-            <div class="glass-card h-[432px] animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
+          <div class="grid gap-8 lg:grid-cols-2">
+            <div class="h-[400px] animate-pulse bg-zinc-100 dark:bg-zinc-800"></div>
+            <div class="h-[400px] animate-pulse bg-zinc-100 dark:bg-zinc-800"></div>
           </div>
         </template>
       </Suspense>
 
       <Suspense>
         <template #default>
-          <AllocationChart />
+          <div class="data-panel p-4">
+            <AllocationChart />
+          </div>
         </template>
         <template #fallback>
-          <div class="glass-card h-[432px] animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
+          <div class="h-[400px] animate-pulse bg-zinc-100 dark:bg-zinc-800"></div>
         </template>
       </Suspense>
     </div>

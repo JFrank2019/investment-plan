@@ -52,37 +52,41 @@ const chartOption = computed(() => {
     return formatMoney(binStart + binWidth / 2)
   })
 
-  const textColor = isDark.value ? '#a1a1aa' : '#71717a'
-  const lineColor = isDark.value ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+  // Theme Colors (Slate / Financial Navy)
+  const textColor = isDark.value ? '#94a3b8' : '#64748b'
+  const axisLineColor = isDark.value ? '#334155' : '#e2e8f0'
+  const splitLineColor = isDark.value ? '#1e293b' : '#f1f5f9'
+  const tooltipBg = isDark.value ? '#0f172a' : '#ffffff'
+  const tooltipBorder = isDark.value ? '#1e293b' : '#e2e8f0'
 
   return {
     backgroundColor: 'transparent',
     title: {
       text: '终值分布',
-      left: 'center',
+      left: 'left',
       textStyle: {
-        color: isDark.value ? '#fff' : '#18181b',
-        fontSize: 16,
+        color: isDark.value ? '#f8fafc' : '#0f172a',
+        fontSize: 14,
         fontWeight: 600,
       },
     },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: isDark.value ? '#27272a' : '#fff',
-      borderColor: isDark.value ? '#3f3f46' : '#e4e4e7',
+      backgroundColor: tooltipBg,
+      borderColor: tooltipBorder,
       textStyle: {
-        color: isDark.value ? '#fff' : '#18181b',
+        color: isDark.value ? '#f8fafc' : '#0f172a',
         ...getMoneyTextStyle(),
       },
       formatter: (params: { value: number; name: string }[]) => {
         const p = params[0]
         if (!p) return ''
-        return `<div class="money-text">${escapeHtml(p.name)}</div><div class="money-text">频次: ${p.value}</div>`
+        return `<div class="money-text text-xs text-zinc-500 mb-1">区间中心值</div><div class="money-text font-bold mb-2">${escapeHtml(p.name)}</div><div class="money-text text-xs">频次: <span class="font-bold">${p.value}</span></div>`
       },
     },
     grid: {
-      left: '3%',
-      right: '4%',
+      left: '0%',
+      right: '2%',
       bottom: '3%',
       top: '15%',
       containLabel: true,
@@ -90,7 +94,7 @@ const chartOption = computed(() => {
     xAxis: {
       type: 'category',
       data: binLabels,
-      axisLine: { lineStyle: { color: lineColor } },
+      axisLine: { lineStyle: { color: axisLineColor } },
       axisLabel: {
         color: textColor,
         rotate: 35,
@@ -98,14 +102,15 @@ const chartOption = computed(() => {
         fontSize: 10,
         ...getMoneyAxisLabel(),
       },
+      axisTick: { show: false },
     },
     yAxis: {
       type: 'value',
       name: '频次',
-      nameTextStyle: { color: textColor },
+      nameTextStyle: { color: textColor, fontSize: 10, padding: [0, 0, 0, 20] },
       axisLine: { show: false },
-      splitLine: { lineStyle: { color: lineColor } },
-      axisLabel: { color: textColor },
+      splitLine: { lineStyle: { color: splitLineColor } },
+      axisLabel: { color: textColor, fontSize: 10 },
     },
     series: [
       {
@@ -119,16 +124,17 @@ const chartOption = computed(() => {
             x2: 0,
             y2: 1,
             colorStops: [
-              { offset: 0, color: '#3b82f6' },
-              { offset: 1, color: '#2563eb' },
+              { offset: 0, color: '#3b82f6' }, // Blue 500
+              { offset: 1, color: '#2563eb' }, // Blue 600
             ],
           },
-          borderRadius: [4, 4, 0, 0],
+          borderRadius: [2, 2, 0, 0],
         },
         markLine: {
           silent: true,
           symbol: 'none',
           lineStyle: { type: 'dashed' },
+          label: { position: 'start', fontSize: 10 },
           data: [
             {
               name: '中位数',
@@ -144,11 +150,10 @@ const chartOption = computed(() => {
                     ),
                   )
                 ],
-              lineStyle: { color: '#22c55e', width: 2 },
+              lineStyle: { color: '#10b981', width: 2 }, // Emerald 500
               label: {
                 formatter: '中位数',
-                color: '#22c55e',
-                position: 'end',
+                color: '#10b981',
               },
             },
             {
@@ -165,11 +170,10 @@ const chartOption = computed(() => {
                     ),
                   )
                 ],
-              lineStyle: { color: '#ef4444', width: 2 },
+              lineStyle: { color: '#ef4444', width: 2 }, // Red 500
               label: {
                 formatter: '5%',
                 color: '#ef4444',
-                position: 'end',
               },
             },
             {
@@ -186,11 +190,10 @@ const chartOption = computed(() => {
                     ),
                   )
                 ],
-              lineStyle: { color: '#f59e0b', width: 2 },
+              lineStyle: { color: '#f59e0b', width: 2 }, // Amber 500
               label: {
                 formatter: '95%',
                 color: '#f59e0b',
-                position: 'end',
               },
             },
           ],
@@ -202,7 +205,5 @@ const chartOption = computed(() => {
 </script>
 
 <template>
-  <div class="glass-card p-4 sm:p-6">
-    <VChart :option="chartOption" autoresize style="height: 400px" />
-  </div>
+  <VChart :option="chartOption" autoresize style="height: 100%; min-height: 350px;" />
 </template>

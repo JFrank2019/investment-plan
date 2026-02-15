@@ -49,7 +49,7 @@ function handleBackdropClick(e: MouseEvent) {
     >
       <div
         v-if="open"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
         @click="handleBackdropClick"
       >
         <Transition
@@ -62,7 +62,7 @@ function handleBackdropClick(e: MouseEvent) {
         >
           <div
             v-if="open"
-            class="glass-card w-full max-w-sm p-6 shadow-xl"
+            class="data-panel w-full max-w-sm p-6 shadow-xl"
             @click.stop
           >
             <h3 class="mb-2 text-lg font-semibold text-zinc-900 dark:text-white">
@@ -71,16 +71,16 @@ function handleBackdropClick(e: MouseEvent) {
             <p class="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
               {{ message }}
             </p>
-            <div class="flex gap-3">
+            <div class="flex gap-3 justify-end">
               <button
                 @click="handleCancel"
-                class="flex-1 rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 transition-all hover:bg-zinc-50 dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+                class="btn-secondary"
               >
                 {{ cancelText }}
               </button>
               <button
                 @click="handleConfirm"
-                class="btn-primary flex-1 rounded-lg! px-4! py-2.5! text-sm"
+                class="btn-primary"
               >
                 {{ confirmText }}
               </button>

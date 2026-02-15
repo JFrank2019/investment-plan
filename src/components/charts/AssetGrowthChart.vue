@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
@@ -13,7 +13,7 @@ import VChart from 'vue-echarts'
 import { useInvestmentStore } from '@/stores/investment'
 import { formatMoney, formatMonthLabel } from '@/engine'
 import { useDark } from '@vueuse/core'
-import { getMoneyTextStyle, getMoneyAxisLabel, escapeHtml } from '@/utils/chartConfig'
+import { getMoneyTextStyle, getMoneyAxisLabel } from '@/utils/chartConfig'
 
 use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent])
 
@@ -41,34 +41,44 @@ const chartOption = computed(() => {
   const realP5Values = confidenceBands.map((b) => b.realP5 ?? b.p5)
   const realP95Values = confidenceBands.map((b) => b.realP95 ?? b.p95)
 
-  const textColor = isDark.value ? '#a1a1aa' : '#71717a'
-  const lineColor = isDark.value ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+  // Theme Colors (Slate / Financial Navy)
+  const textColor = isDark.value ? '#94a3b8' : '#64748b' // Slate 400 / 500
+  const axisLineColor = isDark.value ? '#334155' : '#e2e8f0' // Slate 700 / 200
+  const splitLineColor = isDark.value ? '#1e293b' : '#f1f5f9' // Slate 800 / 100
+  const tooltipBg = isDark.value ? '#0f172a' : '#ffffff' // Slate 900 / White
+  const tooltipBorder = isDark.value ? '#1e293b' : '#e2e8f0' // Slate 800 / 200
 
   return {
     backgroundColor: 'transparent',
     title: {
       text: '资产增长曲线',
-      left: 'center',
+      left: 'left',
       textStyle: {
-        color: isDark.value ? '#fff' : '#18181b',
-        fontSize: 16,
+        color: isDark.value ? '#f8fafc' : '#0f172a', // Slate 50 / 900
+        fontSize: 14,
         fontWeight: 600,
       },
     },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: isDark.value ? '#27272a' : '#fff',
-      borderColor: isDark.value ? '#3f3f46' : '#e4e4e7',
+      backgroundColor: tooltipBg,
+      borderColor: tooltipBorder,
       textStyle: {
-        color: isDark.value ? '#fff' : '#18181b',
+        color: isDark.value ? '#f8fafc' : '#0f172a',
         ...getMoneyTextStyle(),
       },
-      formatter: (params: { seriesName: string; value: number; axisValue: string }[]) => {
+      formatter: (params: any[]) => {
         const month = params[0]?.axisValue ?? ''
-        let html = `<div class="font-medium">${escapeHtml(month)}</div>`
+        let html = `<div class="font-medium mb-2 border-b border-zinc-100 dark:border-zinc-800 pb-1">${month}</div>`
         params.forEach((p) => {
           if (p.value !== undefined) {
-            html += `<div class="flex justify-between gap-4"><span>${escapeHtml(p.seriesName)}</span><span class="font-medium money-text">${formatMoney(p.value)}</span></div>`
+            // 只显示关键指标，避免太多
+            if (p.seriesName.includes('下界')) return
+            html += `
+              <div class="flex justify-between gap-4 text-xs mb-1">
+                <span style="color: ${p.color}">${p.seriesName}</span>
+                <span class="font-mono font-medium">${formatMoney(p.value)}</span>
+              </div>`
           }
         })
         return html
@@ -76,48 +86,46 @@ const chartOption = computed(() => {
     },
     legend: {
       bottom: 0,
-      textStyle: { color: textColor },
-      data: [
-        '确定性预测',
-        '蒙特卡洛中位数',
-        '95%置信区间',
-        '实际95%置信区间',
-        '累计投入',
-        '实际购买力',
-        '实际中位数',
-      ],
+      icon: 'circle',
+      itemWidth: 8,
+      itemHeight: 8,
+      textStyle: { color: textColor, fontSize: 12 },
+      data: ['确定性预测', '蒙特卡洛中位数', '95%置信区间', '累计投入', '实际购买力'],
     },
     grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '15%',
+      left: '0%',
+      right: '2%',
+      bottom: '10%',
       top: '15%',
       containLabel: true,
     },
     xAxis: {
       type: 'category',
       data: months,
-      axisLine: { lineStyle: { color: lineColor } },
-      axisLabel: { color: textColor },
+      axisLine: { lineStyle: { color: axisLineColor } },
+      axisLabel: { color: textColor, fontSize: 11 },
+      axisTick: { show: false },
     },
     yAxis: {
       type: 'value',
       axisLine: { show: false },
-      splitLine: { lineStyle: { color: lineColor } },
+      splitLine: { lineStyle: { color: splitLineColor } },
       axisLabel: {
         color: textColor,
+        fontSize: 11,
         ...getMoneyAxisLabel(),
-        formatter: (value: number) => formatMoney(value),
+        formatter: (value: number) => formatMoney(value, 0),
       },
     },
     series: [
+      // 蒙特卡洛置信区间 (背景带)
       {
         name: '95%置信区间',
         type: 'line',
         data: p95Values,
         lineStyle: { opacity: 0 },
         areaStyle: {
-          color: 'rgba(59, 130, 246, 0.15)',
+          color: isDark.value ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.1)',
         },
         stack: 'confidence',
         symbol: 'none',
@@ -125,79 +133,52 @@ const chartOption = computed(() => {
       {
         name: '95%置信区间下界',
         type: 'line',
-        data: p5Values.map((v, i) => (p95Values[i] ?? 0) - v),
+        data: p5Values,
         lineStyle: { opacity: 0 },
         areaStyle: {
-          color: isDark.value ? '#1a1a2e' : '#f8fafc',
+          color: isDark.value ? '#020617' : '#ffffff', // Mask with bg color
         },
         stack: 'confidence',
         symbol: 'none',
         tooltip: { show: false },
       },
-      {
-        name: '实际95%置信区间',
-        type: 'line',
-        data: realP95Values,
-        lineStyle: { opacity: 0 },
-        areaStyle: {
-          color: 'rgba(168, 85, 247, 0.12)',
-        },
-        stack: 'real-confidence',
-        symbol: 'none',
-      },
-      {
-        name: '实际95%置信区间下界',
-        type: 'line',
-        data: realP5Values.map((v, i) => (realP95Values[i] ?? 0) - v),
-        lineStyle: { opacity: 0 },
-        areaStyle: {
-          color: isDark.value ? '#18122b' : '#faf5ff',
-        },
-        stack: 'real-confidence',
-        symbol: 'none',
-        tooltip: { show: false },
-      },
+      
+      // 核心曲线
       {
         name: '确定性预测',
         type: 'line',
         data: deterministicValues,
-        lineStyle: { width: 3, color: '#3b82f6' },
+        lineStyle: { width: 2, color: '#3b82f6' }, // Blue 500
         itemStyle: { color: '#3b82f6' },
-        symbol: 'circle',
-        symbolSize: 6,
+        symbol: 'none',
+        showSymbol: false,
       },
       {
         name: '蒙特卡洛中位数',
         type: 'line',
         data: medianValues,
-        lineStyle: { width: 2, color: '#22c55e', type: 'dashed' },
-        itemStyle: { color: '#22c55e' },
+        lineStyle: { width: 2, color: '#10b981', type: 'dashed' }, // Emerald 500
+        itemStyle: { color: '#10b981' },
         symbol: 'none',
+        showSymbol: false,
       },
       {
         name: '累计投入',
         type: 'line',
         data: investmentValues,
-        lineStyle: { width: 2, color: '#71717a', type: 'dotted' },
-        itemStyle: { color: '#71717a' },
+        lineStyle: { width: 1.5, color: textColor, type: 'dotted' },
+        itemStyle: { color: textColor },
         symbol: 'none',
+        showSymbol: false,
       },
       {
         name: '实际购买力',
         type: 'line',
         data: realDeterministicValues,
-        lineStyle: { width: 2, color: '#a855f7', type: 'solid' },
+        lineStyle: { width: 2, color: '#a855f7' }, // Purple 500
         itemStyle: { color: '#a855f7' },
-        symbol: 'diamond',
-        symbolSize: 4,
-      },
-      {
-        name: '实际中位数',
-        type: 'line',
-        data: realMedianValues,
-        lineStyle: { width: 1.5, color: '#c084fc', type: 'dashed' },
-        itemStyle: { color: '#c084fc' },
         symbol: 'none',
+        showSymbol: false,
       },
     ],
   }
@@ -205,7 +186,6 @@ const chartOption = computed(() => {
 </script>
 
 <template>
-  <div class="glass-card p-4 sm:p-6">
-    <VChart :option="chartOption" autoresize style="height: 400px" />
-  </div>
+  <!-- Removed wrapper div, chart takes full height of parent -->
+  <VChart :option="chartOption" autoresize style="height: 100%; min-height: 350px;" />
 </template>

@@ -12,6 +12,8 @@ import {
   Shield,
   Percent,
   Coins,
+  ArrowUpRight,
+  ArrowDownRight
 } from 'lucide-vue-next'
 
 const store = useInvestmentStore()
@@ -52,134 +54,145 @@ const stats = computed(() => {
   }
 })
 
-const cards = computed(() => {
-  if (!stats.value) return []
-
-  const cardsList = [
-    {
-      // 主要数据 - 蓝色
-      title: '预期终值（确定性）',
-      value: formatMoney(stats.value.deterministicFinal),
-      subValue: `收益 ${formatMoney(stats.value.deterministicProfit)}`,
-      icon: Target,
-      bgColor: 'bg-blue-100 dark:bg-blue-500/20',
-      iconColor: 'text-blue-600 dark:text-blue-400',
-    },
-    {
-      // 正向/负向指标 - 绿色/红色
-      title: '预期收益率',
-      value: formatPercent(stats.value.deterministicReturn),
-      subValue: stats.value.deterministicReturn >= 0 ? '正收益' : '负收益',
-      icon: stats.value.deterministicReturn >= 0 ? TrendingUp : TrendingDown,
-      bgColor:
-        stats.value.deterministicReturn >= 0
-          ? 'bg-emerald-100 dark:bg-emerald-500/20'
-          : 'bg-red-100 dark:bg-red-500/20',
-      iconColor:
-        stats.value.deterministicReturn >= 0
-          ? 'text-emerald-600 dark:text-emerald-400'
-          : 'text-red-600 dark:text-red-400',
-    },
-    {
-      // 主要数据 - 蓝色
-      title: '蒙特卡洛中位数',
-      value: formatMoney(stats.value.medianFinal),
-      subValue: `收益率 ${formatPercent(stats.value.medianReturn)}`,
-      icon: BarChart3,
-      bgColor: 'bg-blue-100 dark:bg-blue-500/20',
-      iconColor: 'text-blue-600 dark:text-blue-400',
-    },
-    {
-      // 主要数据 - 蓝色
-      title: '终值偏股占比',
-      value: formatPercent(stats.value.deterministicEquityRatio),
-      subValue: `偏债 ${formatPercent(1 - stats.value.deterministicEquityRatio)}`,
-      icon: Percent,
-      bgColor: 'bg-blue-100 dark:bg-blue-500/20',
-      iconColor: 'text-blue-600 dark:text-blue-400',
-    },
-    {
-      // 主要数据 - 蓝色（置信区间拆分显示）
-      title: '90%置信区间',
-      value: formatMoney(stats.value.p5Final),
-      subValue: `至 ${formatMoney(stats.value.p95Final)}`,
-      icon: Shield,
-      bgColor: 'bg-blue-100 dark:bg-blue-500/20',
-      iconColor: 'text-blue-600 dark:text-blue-400',
-    },
-    {
-      // 风险指标 - 绿色/红色
-      title: '亏损概率',
-      value: formatPercent(stats.value.lossProbability),
-      subValue: stats.value.lossProbability < 0.1 ? '风险较低' : '请注意风险',
-      icon: AlertTriangle,
-      bgColor:
-        stats.value.lossProbability < 0.1
-          ? 'bg-emerald-100 dark:bg-emerald-500/20'
-          : 'bg-red-100 dark:bg-red-500/20',
-      iconColor:
-        stats.value.lossProbability < 0.1
-          ? 'text-emerald-600 dark:text-emerald-400'
-          : 'text-red-600 dark:text-red-400',
-    },
-    {
-      // 风险指标 - 橙色
-      title: '平均最大回撤',
-      value: formatPercent(stats.value.avgMaxDrawdown),
-      subValue: '蒙特卡洛平均',
-      icon: TrendingDown,
-      bgColor: 'bg-orange-100 dark:bg-orange-500/20',
-      iconColor: 'text-orange-600 dark:text-orange-400',
-    },
-    {
-      // 中性信息 - 灰色
-      title: '累计投入',
-      value: formatMoney(store.totalInvestment),
-      subValue: `初始 ${formatMoney(store.params.initialCapital)}`,
-      icon: DollarSign,
-      bgColor: 'bg-zinc-100 dark:bg-white/10',
-      iconColor: 'text-zinc-600 dark:text-zinc-400',
-    },
-  ]
-
-  // 添加通胀调整卡片
-  if (stats.value.realFinalValue !== undefined && stats.value.realFinalValue !== null) {
-    const realProfitRate = stats.value.realProfitRate ?? 0
-    cardsList.push({
-      title: '实际购买力',
-      value: formatMoney(stats.value.realFinalValue),
-      subValue: `实际收益 ${formatPercent(realProfitRate)}`,
-      icon: Coins,
-      bgColor:
-        realProfitRate >= 0
-          ? 'bg-purple-100 dark:bg-purple-500/20'
-          : 'bg-red-100 dark:bg-red-500/20',
-      iconColor:
-        realProfitRate >= 0 ? 'text-purple-600 dark:text-purple-400' : 'text-red-600 dark:text-red-400',
-    })
+// 辅助函数：根据数值获取颜色
+const getValueColor = (val: number, isGoodHigh = true) => {
+  if (isGoodHigh) {
+    return val > 0 ? 'text-emerald-600 dark:text-emerald-500' : val < 0 ? 'text-rose-600 dark:text-rose-500' : 'text-zinc-500'
   }
-
-  return cardsList
-})
+  return val < 0.1 ? 'text-emerald-600 dark:text-emerald-500' : val < 0.3 ? 'text-amber-600 dark:text-amber-500' : 'text-rose-600 dark:text-rose-500'
+}
 </script>
 
 <template>
-  <div v-if="stats" class="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
-    <div
-      v-for="card in cards"
-      :key="card.title"
-      class="glass-card glass-card--interactive p-3 transition-all duration-300 sm:p-4 lg:p-5 lg:hover:scale-[1.02]"
-    >
-      <div class="flex items-start justify-between gap-2">
-        <div class="min-w-0 flex-1">
-          <p class="text-xs font-medium text-zinc-500 sm:text-sm dark:text-zinc-400">{{ card.title }}</p>
-          <p class="money-text mt-1 truncate text-base font-bold text-zinc-900 sm:mt-2 sm:text-xl lg:text-2xl dark:text-white">{{ card.value }}</p>
-          <p class="money-text mt-0.5 text-[10px] text-zinc-500 sm:mt-1 sm:text-xs dark:text-zinc-400">{{ card.subValue }}</p>
-        </div>
-        <div :class="['flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9 sm:rounded-xl lg:h-10 lg:w-10', card.bgColor]">
-          <component :is="card.icon" :class="['h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5', card.iconColor]" />
+  <div v-if="stats" class="data-panel overflow-hidden">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-zinc-100 bg-zinc-50/50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/30">
+      <div class="flex items-center gap-2">
+        <Target class="h-4 w-4 icon-base" />
+        <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">核心指标</h3>
+      </div>
+      <span class="font-mono text-[10px] text-zinc-400 uppercase tracking-widest">Performance Metrics</span>
+    </div>
+
+    <div class="grid grid-cols-1 divide-y divide-zinc-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:divide-zinc-800">
+      
+      <!-- Column 1: Core Value (核心资产) -->
+      <div class="p-6">
+        <h4 class="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+          <DollarSign class="h-3.5 w-3.5" />
+          资产终值
+        </h4>
+        <div class="space-y-6">
+          <!-- Deterministic Final -->
+          <div>
+            <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">预期终值 (确定性)</p>
+            <p class="money-text mt-1 text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+              {{ formatMoney(stats.deterministicFinal) }}
+            </p>
+            <div class="mt-2 flex items-center gap-1.5">
+              <span :class="['text-xs font-medium flex items-center gap-0.5', getValueColor(stats.deterministicProfit)]">
+                <ArrowUpRight v-if="stats.deterministicProfit > 0" class="h-3 w-3" />
+                <ArrowDownRight v-else class="h-3 w-3" />
+                {{ formatMoney(stats.deterministicProfit) }}
+              </span>
+              <span class="text-[10px] text-zinc-400">累计收益</span>
+            </div>
+          </div>
+
+          <!-- Real Value -->
+          <div v-if="stats.realFinalValue" class="pt-4 border-t border-dashed border-zinc-100 dark:border-zinc-800">
+            <div class="flex items-baseline justify-between">
+              <span class="text-xs text-zinc-500 dark:text-zinc-400">实际购买力</span>
+              <span class="money-text font-bold text-zinc-700 dark:text-zinc-300">
+                {{ formatMoney(stats.realFinalValue) }}
+              </span>
+            </div>
+            <p class="mt-1 text-[10px] text-zinc-400 text-right">扣除 {{ formatPercent(stats.inflationRate) }} 通胀后</p>
+          </div>
         </div>
       </div>
+
+      <!-- Column 2: Returns (收益率) -->
+      <div class="p-6">
+        <h4 class="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+          <TrendingUp class="h-3.5 w-3.5" />
+          收益表现
+        </h4>
+        <div class="space-y-5">
+          <!-- CAGR -->
+          <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">总收益率</span>
+              <span class="text-[10px] text-zinc-400">确定性模型</span>
+            </div>
+            <span :class="['money-text text-lg font-bold', getValueColor(stats.deterministicReturn)]">
+              {{ formatPercent(stats.deterministicReturn) }}
+            </span>
+          </div>
+
+          <!-- Median Return -->
+          <div class="flex items-center justify-between border-t border-dashed border-zinc-100 pt-4 dark:border-zinc-800">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">中位数收益率</span>
+              <span class="text-[10px] text-zinc-400">蒙特卡洛模拟</span>
+            </div>
+            <span class="money-text text-base font-medium text-zinc-700 dark:text-zinc-300">
+              {{ formatPercent(stats.medianReturn) }}
+            </span>
+          </div>
+
+          <!-- Real Return -->
+          <div v-if="stats.realProfitRate" class="flex items-center justify-between border-t border-dashed border-zinc-100 pt-4 dark:border-zinc-800">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">实际收益率</span>
+              <span class="text-[10px] text-zinc-400">扣除通胀</span>
+            </div>
+            <span :class="['money-text text-base font-medium', getValueColor(stats.realProfitRate)]">
+              {{ formatPercent(stats.realProfitRate) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 3: Range & Allocation (区间与配置) -->
+      <div class="p-6 bg-zinc-50/50 dark:bg-zinc-900/20">
+        <h4 class="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+          <BarChart3 class="h-3.5 w-3.5" />
+          分布与配置
+        </h4>
+        <div class="space-y-6">
+          <!-- Confidence Interval -->
+          <div>
+            <p class="mb-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">90% 置信区间 (终值)</p>
+            <div class="flex items-center gap-2 text-xs">
+              <span class="money-text font-medium text-zinc-600 dark:text-zinc-400">{{ formatMoney(stats.p5Final) }}</span>
+              <div class="h-1 flex-1 rounded-full bg-zinc-200 dark:bg-zinc-700 relative">
+                <div class="absolute left-1/4 right-1/4 h-full rounded-full bg-zinc-400 dark:bg-zinc-500 opacity-50"></div>
+              </div>
+              <span class="money-text font-medium text-zinc-600 dark:text-zinc-400">{{ formatMoney(stats.p95Final) }}</span>
+            </div>
+          </div>
+
+          <!-- Allocation -->
+          <div>
+            <div class="mb-2 flex justify-between text-xs">
+              <span class="font-medium text-zinc-600 dark:text-zinc-300">终值资产配置</span>
+              <span class="font-mono text-zinc-500">{{ formatPercent(stats.deterministicEquityRatio) }} 权益</span>
+            </div>
+            <div class="flex h-2 w-full overflow-hidden rounded-sm bg-zinc-200 dark:bg-zinc-700">
+              <div 
+                class="h-full bg-zinc-800 dark:bg-zinc-200"
+                :style="{ width: `${stats.deterministicEquityRatio * 100}%` }"
+              ></div>
+            </div>
+            <div class="mt-1.5 flex justify-between text-[10px] text-zinc-400 uppercase tracking-wider">
+              <span>Equity</span>
+              <span>Bond</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>

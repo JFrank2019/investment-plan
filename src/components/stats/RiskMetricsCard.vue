@@ -10,146 +10,174 @@ import {
   Clock,
   RotateCcw,
   Activity,
+  Info
 } from 'lucide-vue-next'
 
 const store = useInvestmentStore()
 
 function formatRatio(value: number): string {
-  if (!Number.isFinite(value)) {
-    return '极高'
-  }
+  if (!Number.isFinite(value)) return '∞'
   return value.toFixed(2)
 }
 
-const riskMetrics = computed(() => {
-  if (!store.monteCarloResult?.statistics?.riskMetrics) return null
-  return store.monteCarloResult.statistics.riskMetrics
-})
+const rm = computed(() => store.monteCarloResult?.statistics?.riskMetrics)
 
-const metrics = computed(() => {
-  if (!riskMetrics.value) return []
+// 辅助函数：根据数值获取颜色类名
+const getRatioColor = (val: number) => {
+  if (val >= 1) return 'text-emerald-600 dark:text-emerald-500'
+  if (val >= 0.5) return 'text-amber-600 dark:text-amber-500'
+  return 'text-rose-600 dark:text-rose-500'
+}
 
-  const rm = riskMetrics.value
-
-  return [
-    {
-      title: '夏普比率',
-      value: formatRatio(rm.sharpeRatio),
-      description: '风险调整后收益',
-      icon: Gauge,
-      color: rm.sharpeRatio >= 1 ? 'text-emerald-600 dark:text-emerald-400' : rm.sharpeRatio >= 0.5 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400',
-      bgColor: rm.sharpeRatio >= 1 ? 'bg-emerald-100 dark:bg-emerald-500/20' : rm.sharpeRatio >= 0.5 ? 'bg-amber-100 dark:bg-amber-500/20' : 'bg-red-100 dark:bg-red-500/20',
-      hint: rm.sharpeRatio >= 1 ? '优秀' : rm.sharpeRatio >= 0.5 ? '一般' : '较差',
-    },
-    {
-      title: '索提诺比率',
-      value: formatRatio(rm.sortinoRatio),
-      description: '下行风险调整后收益',
-      icon: TrendingDown,
-      color: rm.sortinoRatio >= 1 ? 'text-emerald-600 dark:text-emerald-400' : rm.sortinoRatio >= 0.5 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400',
-      bgColor: rm.sortinoRatio >= 1 ? 'bg-emerald-100 dark:bg-emerald-500/20' : rm.sortinoRatio >= 0.5 ? 'bg-amber-100 dark:bg-amber-500/20' : 'bg-red-100 dark:bg-red-500/20',
-      hint: rm.sortinoRatio >= 1 ? '优秀' : rm.sortinoRatio >= 0.5 ? '一般' : '较差',
-    },
-    {
-      title: 'VaR (95%)',
-      value: formatPercent(rm.var95Percent),
-      description: '95%置信下相对累计投入的潜在亏损',
-      icon: ShieldAlert,
-      color: 'text-orange-600 dark:text-orange-400',
-      bgColor: 'bg-orange-100 dark:bg-orange-500/20',
-      hint: '风险边界',
-    },
-    {
-      title: '平均最大回撤',
-      value: formatPercent(rm.maxDrawdownMean),
-      description: '历史平均最大跌幅',
-      icon: ArrowDownCircle,
-      color: 'text-red-600 dark:text-red-400',
-      bgColor: 'bg-red-100 dark:bg-red-500/20',
-      hint: '回撤风险',
-    },
-    {
-      title: '最大回撤持续期',
-      value: `${rm.maxDrawdownDuration}月`,
-      description: '最长回撤恢复时间',
-      icon: Clock,
-      color: 'text-amber-600 dark:text-amber-400',
-      bgColor: 'bg-amber-100 dark:bg-amber-500/20',
-      hint: '时间成本',
-    },
-    {
-      title: '恢复概率',
-      value: formatPercent(rm.recoveryProbability),
-      description: '在模拟期内恢复的概率',
-      icon: RotateCcw,
-      color: rm.recoveryProbability >= 0.8 ? 'text-emerald-600 dark:text-emerald-400' : rm.recoveryProbability >= 0.5 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400',
-      bgColor: rm.recoveryProbability >= 0.8 ? 'bg-emerald-100 dark:bg-emerald-500/20' : rm.recoveryProbability >= 0.5 ? 'bg-amber-100 dark:bg-amber-500/20' : 'bg-red-100 dark:bg-red-500/20',
-      hint: '恢复能力',
-    },
-    {
-      title: '亏损概率',
-      value: formatPercent(rm.lossProbability),
-      description: '终值低于本金的概率',
-      icon: Activity,
-      color: rm.lossProbability < 0.1 ? 'text-emerald-600 dark:text-emerald-400' : rm.lossProbability < 0.3 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400',
-      bgColor: rm.lossProbability < 0.1 ? 'bg-emerald-100 dark:bg-emerald-500/20' : rm.lossProbability < 0.3 ? 'bg-amber-100 dark:bg-amber-500/20' : 'bg-red-100 dark:bg-red-500/20',
-      hint: rm.lossProbability < 0.1 ? '低风险' : rm.lossProbability < 0.3 ? '中等风险' : '高风险',
-    },
-  ]
-})
+const getProbColor = (val: number, isGoodHigh = true) => {
+  if (isGoodHigh) {
+    return val >= 0.8 ? 'text-emerald-600 dark:text-emerald-500' : val >= 0.5 ? 'text-amber-600 dark:text-amber-500' : 'text-rose-600 dark:text-rose-500'
+  }
+  return val < 0.1 ? 'text-emerald-600 dark:text-emerald-500' : val < 0.3 ? 'text-amber-600 dark:text-amber-500' : 'text-rose-600 dark:text-rose-500'
+}
 </script>
 
 <template>
-  <div v-if="riskMetrics" class="glass-card p-4 sm:p-6">
-    <div class="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
-      <div
-        class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 sm:h-10 sm:w-10 dark:bg-indigo-500/20"
-      >
-        <ShieldAlert class="h-4 w-4 text-indigo-600 sm:h-5 sm:w-5 dark:text-indigo-400" />
+  <div v-if="rm" class="data-panel overflow-hidden">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-zinc-100 bg-zinc-50/50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/30">
+      <div class="flex items-center gap-2">
+        <Activity class="h-4 w-4 icon-base" />
+        <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">风险概览</h3>
       </div>
-      <div>
-        <h3 class="text-base font-semibold text-zinc-900 sm:text-lg dark:text-white">风险指标</h3>
-        <p class="text-xs text-zinc-500 dark:text-zinc-400">全面评估投资组合的风险水平</p>
-      </div>
+      <span class="font-mono text-[10px] text-zinc-400 uppercase tracking-widest">Risk Profile</span>
     </div>
 
-    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-      <div
-        v-for="metric in metrics"
-        :key="metric.title"
-        class="rounded-lg border border-zinc-100 p-3 transition-all hover:border-zinc-200 dark:border-zinc-700 dark:hover:border-zinc-600"
-      >
-        <div class="flex items-start justify-between gap-1">
-          <div class="min-w-0 flex-1">
-            <p class="text-[10px] font-medium text-zinc-500 sm:text-xs dark:text-zinc-400">
-              {{ metric.title }}
-            </p>
-            <p
-              :class="[
-                'mt-0.5 text-sm font-bold sm:text-base lg:text-lg',
-                metric.color,
-              ]"
-            >
-              {{ metric.value }}
-            </p>
+    <!-- Data Grid -->
+    <div class="grid grid-cols-1 divide-y divide-zinc-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:divide-zinc-800">
+      
+      <!-- Column 1: Efficiency (回报效率) -->
+      <div class="p-6">
+        <h4 class="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+          <Gauge class="h-3.5 w-3.5" />
+          回报效率
+        </h4>
+        <div class="space-y-6">
+          <!-- Sharpe -->
+          <div class="group">
+            <div class="flex items-baseline justify-between">
+              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors">夏普比率</span>
+              <span :class="['font-mono text-lg font-bold tracking-tight', getRatioColor(rm.sharpeRatio)]">
+                {{ formatRatio(rm.sharpeRatio) }}
+              </span>
+            </div>
+            <div class="mt-2 h-1 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+              <div class="h-full rounded-full transition-all duration-500" 
+                :class="rm.sharpeRatio >= 1 ? 'bg-emerald-500' : rm.sharpeRatio >= 0.5 ? 'bg-amber-500' : 'bg-rose-500'"
+                :style="{ width: `${Math.min(Math.max(rm.sharpeRatio * 33, 5), 100)}%` }"
+              ></div>
+            </div>
+            <p class="mt-1.5 text-[10px] text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100">每承担一单位风险获得的超额回报</p>
           </div>
-          <div :class="['flex h-6 w-6 shrink-0 items-center justify-center rounded-md sm:h-7 sm:w-7', metric.bgColor]">
-            <component :is="metric.icon" :class="['h-3 w-3 sm:h-3.5 sm:w-3.5', metric.color]" />
+
+          <!-- Sortino -->
+          <div class="group pt-2">
+            <div class="flex items-baseline justify-between">
+              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors">索提诺比率</span>
+              <span :class="['font-mono text-lg font-bold tracking-tight', getRatioColor(rm.sortinoRatio)]">
+                {{ formatRatio(rm.sortinoRatio) }}
+              </span>
+            </div>
+            <p class="mt-1.5 text-[10px] text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100">仅考虑下行风险的回报效率</p>
           </div>
         </div>
-        <p class="mt-1 text-[10px] text-zinc-400 sm:text-xs dark:text-zinc-500">
-          {{ metric.description }}
-        </p>
-        <span
-          :class="[
-            'mt-1 inline-block rounded-full px-1.5 py-0.5 text-[10px] font-medium',
-            metric.bgColor,
-            metric.color,
-          ]"
-        >
-          {{ metric.hint }}
-        </span>
       </div>
+
+      <!-- Column 2: Downside (下行风险) -->
+      <div class="p-6">
+        <h4 class="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+          <ShieldAlert class="h-3.5 w-3.5" />
+          下行风险
+        </h4>
+        <div class="space-y-5">
+          <!-- Max Drawdown -->
+          <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">平均最大回撤</span>
+              <span class="text-[10px] text-zinc-400">历史平均跌幅</span>
+            </div>
+            <span class="font-mono text-base font-bold text-rose-600 dark:text-rose-500">
+              {{ formatPercent(rm.maxDrawdownMean) }}
+            </span>
+          </div>
+
+          <!-- VaR -->
+          <div class="flex items-center justify-between border-t border-dashed border-zinc-100 pt-4 dark:border-zinc-800">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">VaR (95%)</span>
+              <span class="text-[10px] text-zinc-400">极端情况潜在亏损</span>
+            </div>
+            <span class="font-mono text-base font-bold text-amber-600 dark:text-amber-500">
+              {{ formatPercent(rm.var95Percent) }}
+            </span>
+          </div>
+
+          <!-- Duration -->
+          <div class="flex items-center justify-between border-t border-dashed border-zinc-100 pt-4 dark:border-zinc-800">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">回撤持续期</span>
+              <span class="text-[10px] text-zinc-400">最长恢复时间</span>
+            </div>
+            <span class="font-mono text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              {{ rm.maxDrawdownDuration }} 个月
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 3: Probability (概率分布) -->
+      <div class="p-6 bg-zinc-50/50 dark:bg-zinc-900/20">
+        <h4 class="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+          <RotateCcw class="h-3.5 w-3.5" />
+          概率预测
+        </h4>
+        <div class="space-y-6">
+          <!-- Recovery Prob -->
+          <div>
+            <div class="mb-2 flex justify-between text-xs">
+              <span class="font-medium text-zinc-600 dark:text-zinc-300">本金恢复概率</span>
+              <span :class="['font-mono font-bold', getProbColor(rm.recoveryProbability, true)]">
+                {{ formatPercent(rm.recoveryProbability) }}
+              </span>
+            </div>
+            <div class="flex h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+              <div 
+                class="h-full rounded-full transition-all duration-500"
+                :class="getProbColor(rm.recoveryProbability, true).replace('text-', 'bg-').replace('600', '500')"
+                :style="{ width: `${rm.recoveryProbability * 100}%` }"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Loss Prob -->
+          <div>
+            <div class="mb-2 flex justify-between text-xs">
+              <span class="font-medium text-zinc-600 dark:text-zinc-300">终值亏损概率</span>
+              <span :class="['font-mono font-bold', getProbColor(rm.lossProbability, false)]">
+                {{ formatPercent(rm.lossProbability) }}
+              </span>
+            </div>
+            <div class="flex h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+              <div 
+                class="h-full rounded-full transition-all duration-500"
+                :class="getProbColor(rm.lossProbability, false).replace('text-', 'bg-').replace('600', '500')"
+                :style="{ width: `${rm.lossProbability * 100}%` }"
+              ></div>
+            </div>
+          </div>
+          
+          <div class="mt-6 flex items-start gap-2 rounded bg-zinc-100 p-3 text-[10px] leading-relaxed text-zinc-500 dark:bg-zinc-800/50 dark:text-zinc-400">
+            <Info class="mt-0.5 h-3 w-3 shrink-0" />
+            <p>基于 {{ store.params.monteCarloSimulations }} 次蒙特卡洛模拟结果统计。</p>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>

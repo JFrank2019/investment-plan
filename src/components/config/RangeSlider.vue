@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useEventListener } from '@vueuse/core'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 interface Props {
   modelValue: number
@@ -20,101 +19,103 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  'update:modelValue': [value: number]
+  (e: 'update:modelValue', value: number): void
 }>()
 
 const sliderRef = ref<HTMLDivElement>()
 const isDragging = ref(false)
-const currentValue = ref(props.modelValue)
+const localValue = ref(props.modelValue)
 
 const percentage = computed(() => {
   const range = props.max - props.min
-  return ((currentValue.value - props.min) / range) * 100
+  if (range <= 0) return 0
+  return Math.min(100, Math.max(0, ((localValue.value - props.min) / range) * 100))
 })
 
-const handleStart = (e: MouseEvent | TouchEvent) => {
-  if (props.disabled) return
-  e.preventDefault()
-  isDragging.value = true
-  updateValue(e)
-}
-
-const handleMove = (e: MouseEvent | TouchEvent) => {
-  if (!isDragging.value || props.disabled) return
-  e.preventDefault()
-  updateValue(e)
-}
-
-const handleEnd = () => {
-  isDragging.value = false
-}
-
-const updateValue = (e: MouseEvent | TouchEvent) => {
+const updateValueFromClientX = (clientX: number) => {
   const slider = sliderRef.value
   if (!slider) return
 
   const rect = slider.getBoundingClientRect()
-  const clientX = 'touches' in e ? e.touches[0]?.clientX ?? 0 : e.clientX
   const x = clientX - rect.left
-  const percentage = Math.max(0, Math.min(1, x / rect.width))
+  const width = rect.width
+  if (width <= 0) return
+
+  let pct = x / width
+  pct = Math.max(0, Math.min(1, pct))
+
   const range = props.max - props.min
-  const rawValue = props.min + percentage * range
-  const steppedValue = Math.round((rawValue - props.min) / props.step) * props.step + props.min
+  const rawValue = props.min + pct * range
+  
+  // Snap to step
+  const steppedValue = Math.round(rawValue / props.step) * props.step
   const clampedValue = Math.max(props.min, Math.min(props.max, steppedValue))
 
-  currentValue.value = clampedValue
+  localValue.value = clampedValue
   emit('update:modelValue', clampedValue)
 }
 
-currentValue.value = props.modelValue
-
-useEventListener(window, 'mousemove', handleMove)
-useEventListener(window, 'mouseup', handleEnd)
-useEventListener(window, 'touchmove', handleMove, { passive: false })
-useEventListener(window, 'touchend', handleEnd)
-
-// 监听外部值变化
-const updateFromProps = () => {
-  if (!isDragging.value) {
-    currentValue.value = props.modelValue
-  }
+const handleStart = (e: MouseEvent | TouchEvent) => {
+  if (props.disabled) return
+  isDragging.value = true
+  const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+  updateValueFromClientX(clientX)
+  
+  window.addEventListener('mousemove', handleMove)
+  window.addEventListener('mouseup', handleEnd)
+  window.addEventListener('touchmove', handleMove, { passive: false })
+  window.addEventListener('touchend', handleEnd)
 }
 
-watch(() => props.modelValue, updateFromProps)
+const handleMove = (e: MouseEvent | TouchEvent) => {
+  if (!isDragging.value) return
+  e.preventDefault() // Prevent scrolling while dragging
+  const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+  updateValueFromClientX(clientX)
+}
+
+const handleEnd = () => {
+  isDragging.value = false
+  window.removeEventListener('mousemove', handleMove)
+  window.removeEventListener('mouseup', handleEnd)
+  window.removeEventListener('touchmove', handleMove)
+  window.removeEventListener('touchend', handleEnd)
+}
+
+watch(() => props.modelValue, (newVal) => {
+  if (!isDragging.value) {
+    localValue.value = newVal
+  }
+})
 </script>
 
 <template>
   <div
     ref="sliderRef"
-    class="relative h-8 w-full cursor-pointer select-none"
+    class="relative h-6 w-full cursor-pointer select-none touch-none flex items-center"
     :class="{ 'cursor-not-allowed opacity-50': disabled }"
     @mousedown="handleStart"
-    @touchstart.prevent="handleStart"
+    @touchstart="handleStart"
   >
-    <!-- 轨道 -->
-    <div
-      class="absolute top-1/2 h-2 w-full -translate-y-1/2 rounded-full bg-zinc-200 dark:bg-white/10"
-    ></div>
+    <!-- Track Background -->
+    <div class="h-1.5 w-full rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
+      <!-- Fill -->
+      <div
+        class="h-full transition-all duration-75 ease-out"
+        :class="[
+          accentColor === 'blue' ? 'bg-blue-600 dark:bg-blue-500' : 'bg-emerald-600 dark:bg-emerald-500'
+        ]"
+        :style="{ width: `${percentage}%` }"
+      ></div>
+    </div>
 
-    <!-- 填充轨道 -->
+    <!-- Thumb -->
     <div
-      class="absolute top-1/2 h-2 -translate-y-1/2 rounded-full transition-all"
-      :class="{
-        'bg-linear-to-r from-blue-400 to-blue-500': accentColor === 'blue',
-        'bg-linear-to-r from-emerald-400 to-emerald-500': accentColor === 'emerald',
-      }"
-      :style="{ width: `${percentage}%` }"
-    ></div>
-
-    <!-- 滑块 -->
-    <div
-      class="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-white transition-all duration-150"
-      :class="{
-        'border-blue-500 shadow-[0_2px_8px_rgba(59,130,246,0.4)]': accentColor === 'blue' && !disabled,
-        'border-emerald-500 shadow-[0_2px_8px_rgba(16,185,129,0.4)]': accentColor === 'emerald' && !disabled,
-        'scale-125 shadow-[0_4px_12px_rgba(59,130,246,0.5)]': isDragging && accentColor === 'blue',
-        'scale-125 shadow-[0_4px_12px_rgba(16,185,129,0.5)]': isDragging && accentColor === 'emerald',
-      }"
+      class="absolute h-4 w-4 -translate-x-1/2 rounded-full bg-white border-2 shadow-sm transition-transform duration-100 ease-out dark:bg-zinc-900"
+      :class="[
+        accentColor === 'blue' ? 'border-blue-600 dark:border-blue-500' : 'border-emerald-600 dark:border-emerald-500',
+        isDragging ? 'scale-125' : 'scale-100'
+      ]"
       :style="{ left: `${percentage}%` }"
     ></div>
   </div>

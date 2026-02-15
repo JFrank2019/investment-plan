@@ -3,234 +3,244 @@
 /* Tailwind CSS v4 暗色模式配置 - 使用类选择器而非媒体查询 */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Tailwind CSS v4 主题配置 - 金融蓝色系 */
+/* Tailwind CSS v4 主题配置 - 金融专业风格 */
 @theme {
-  /* 主色调 - 蓝色系（金融专业风格） */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
-  --color-primary: #3b82f6;
-  --color-primary-dark: #2563eb;
+  /* 重写 Zinc 色板为 Slate (深海蓝灰)，实现全局"金融蓝"风格 */
+  --color-zinc-50: #f8fafc;
+  --color-zinc-100: #f1f5f9;
+  --color-zinc-200: #e2e8f0;
+  --color-zinc-300: #cbd5e1;
+  --color-zinc-400: #94a3b8;
+  --color-zinc-500: #64748b;
+  --color-zinc-600: #475569;
+  --color-zinc-700: #334155;
+  --color-zinc-800: #1e293b;
+  --color-zinc-900: #0f172a;
+  --color-zinc-950: #020617;
 
-  /* 暗色主题背景 */
-  --color-dark-bg-start: #0a0a0a;
-  --color-dark-bg-end: #171717;
+  /* 主色调 - 极简白 & 深海蓝 */
+  --color-primary-50: var(--color-zinc-50);
+  --color-primary-100: var(--color-zinc-100);
+  --color-primary-200: var(--color-zinc-200);
+  --color-primary-300: var(--color-zinc-300);
+  --color-primary-400: var(--color-zinc-400);
+  --color-primary-500: var(--color-zinc-500);
+  --color-primary-600: var(--color-zinc-600);
+  --color-primary-700: var(--color-zinc-700);
+  --color-primary-800: var(--color-zinc-800);
+  --color-primary-900: var(--color-zinc-900);
+  --color-primary: var(--color-zinc-900);
+  --color-primary-dark: var(--color-zinc-50);
 
-  /* 亮色主题背景 - 米白色 */
-  --color-light-bg-start: #fafaf9;
-  --color-light-bg-end: #f5f5f4;
+  /* 语义色 - 更加稳重的金融色 */
+  --color-success: #10b981; /* Emerald 500 - 收益 */
+  --color-danger: #ef4444; /* Red 500 - 亏损 */
+  --color-warning: #f59e0b; /* Amber 500 - 预警 */
+  --color-info: #3b82f6; /* Blue 500 - 操作/链接 */
 
   /* 金融数字字体 */
-  --font-money: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --font-money: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, Monaco, Consolas, monospace;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 /* 基础样式 */
 html {
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 body {
-  @apply antialiased;
-}
-
-/* 亮色主题（默认）- Cursor 风格米白背景 */
-:root {
-  --bg-gradient: linear-gradient(to bottom, var(--color-light-bg-start), var(--color-light-bg-end));
-  --text-primary: #18181b;
-  --text-secondary: #71717a;
-  --card-bg: rgba(255, 255, 255, 0.9);
-  --card-border: rgba(0, 0, 0, 0.08);
-}
-
-/* 暗色主题 - Cursor 风格深灰背景 */
-.dark {
-  --bg-gradient: linear-gradient(to bottom, var(--color-dark-bg-start), var(--color-dark-bg-end));
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
-  --card-bg: rgba(38, 38, 38, 0.8);
-  --card-border: rgba(255, 255, 255, 0.08);
-}
-
-/* 应用背景渐变 */
-#app {
-  min-height: 100vh;
-  background: var(--bg-gradient);
+  @apply antialiased font-sans;
+  background-color: var(--bg-color);
   color: var(--text-primary);
 }
 
-/* 确保文字颜色在亮色模式下可见 */
-.text-zinc-900 {
-  color: #18181b !important;
+/* 亮色主题（默认）- 极简白 (Paper White) */
+:root {
+  --bg-color: #ffffff;
+  --bg-secondary: var(--color-zinc-50);
+  --text-primary: var(--color-zinc-900);
+  --text-secondary: var(--color-zinc-500);
+  --border-color: var(--color-zinc-200);
+  --panel-bg: #ffffff;
+  --input-bg: var(--color-zinc-50);
+  --focus-ring: rgba(15, 23, 42, 0.1);
 }
 
-.dark .text-zinc-900 {
-  color: #18181b !important;
+/* 暗色主题 - 深海蓝 (Deep Navy) */
+.dark {
+  --bg-color: var(--color-zinc-950);
+  --bg-secondary: var(--color-zinc-900);
+  --text-primary: var(--color-zinc-50);
+  --text-secondary: var(--color-zinc-400);
+  --border-color: var(--color-zinc-800);
+  --panel-bg: var(--color-zinc-950);
+  --input-bg: var(--color-zinc-900);
+  --focus-ring: rgba(56, 189, 248, 0.15);
 }
 
-.dark .dark\:text-white {
-  color: #ffffff !important;
+/* 全局应用背景 */
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* 毛玻璃卡片样式 */
-.glass-card {
-  background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--card-border);
-  border-radius: 0.75rem;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 4px 16px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+/* 数据面板 */
+.data-panel {
+  background-color: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  @apply rounded-sm; 
 }
 
-.dark .glass-card {
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
-    0 4px 16px rgba(0, 0, 0, 0.2);
+/* 交互式面板 hover 效果 */
+.data-panel--interactive {
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+.data-panel--interactive:hover {
+  border-color: var(--text-secondary);
 }
 
-/* 可交互卡片的 hover 效果 */
-.glass-card--interactive:hover {
-  box-shadow:
-    0 4px 12px rgba(59, 130, 246, 0.1),
-    0 8px 24px rgba(59, 130, 246, 0.08);
+/* 强调文字 */
+.highlight-text {
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
-.dark .glass-card--interactive:hover {
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
-    0 8px 24px rgba(59, 130, 246, 0.15);
-}
-
-/* 强调文字 - 蓝色渐变 */
-.gradient-text {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-weight: 700;
-}
-
-.dark .gradient-text {
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* 主按钮 - 蓝色系 */
+/* 主按钮 - 高对比度黑白风格 */
 .btn-primary {
-  @apply px-6 py-2.5 rounded-lg font-medium transition-all duration-200;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: #ffffff;
+  @apply px-4 py-2 rounded-sm font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2;
+  background-color: var(--text-primary);
+  color: var(--bg-color);
   border: 1px solid transparent;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  opacity: 0.9;
   transform: translateY(-1px);
-}
-
-.btn-primary:active {
-  transform: translateY(0) scale(0.98);
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
-}
-
-/* 暗色模式下的主按钮 */
-.dark .btn-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .dark .btn-primary:hover {
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* 输入框样式 - 增强交互 */
-.input-field {
-  @apply w-full px-3 py-2 rounded-lg transition-all duration-200 sm:px-4 sm:py-2.5;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 次级按钮 */
+.btn-secondary {
+  @apply px-4 py-2 rounded-sm font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
   color: var(--text-primary);
 }
 
-/* 隐藏数字输入框的原生 spinner 按钮 */
-.input-field[type='number']::-webkit-outer-spin-button,
-.input-field[type='number']::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+.btn-secondary:hover {
+  background-color: var(--bg-secondary);
+  border-color: var(--text-secondary);
 }
 
-.input-field[type='number'] {
-  -moz-appearance: textfield;
+/* 危险按钮 */
+.btn-danger {
+  @apply px-4 py-2 rounded-sm font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2;
+  background-color: transparent;
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
+}
+
+.btn-danger:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* 输入框样式 */
+.input-field {
+  @apply w-full px-3 py-2 rounded-sm text-sm transition-all duration-200;
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: var(--font-money);
 }
 
 .input-field:hover {
-  border-color: rgba(59, 130, 246, 0.3);
+  border-color: var(--text-secondary);
 }
 
 .input-field:focus {
   @apply outline-none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
-.dark .input-field:hover {
-  border-color: rgba(59, 130, 246, 0.4);
-}
-
-.dark .input-field:focus {
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-}
-
-/* 禁用状态 */
 .input-field:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.input-field:disabled:hover {
-  border-color: var(--card-border);
+/* 下拉选择框 */
+select.input-field {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+.dark select.input-field {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+}
+
+/* 隐藏数字输入框的原生 spinner */
+.input-field[type='number']::-webkit-outer-spin-button,
+.input-field[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.input-field[type='number'] {
+  -moz-appearance: textfield;
 }
 
 /* 滚动条样式 */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: var(--card-border);
-  border-radius: 4px;
+  background: var(--border-color);
+  border-radius: 3px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
 }
 
-/* 金融数字字体 - 使用等宽字体和表格数字 */
+/* 金融数字字体 */
 .money-text {
   font-family: var(--font-money);
   font-variant-numeric: tabular-nums;
-  font-feature-settings: 'tnum';
-  -webkit-font-feature-settings: 'tnum';
-  letter-spacing: 0.025em;
+  font-feature-settings: 'tnum', 'zero';
+  letter-spacing: -0.02em;
+}
+
+/* 辅助类 */
+.text-label {
+  @apply text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400;
+}
+
+.section-divider {
+  @apply border-t border-zinc-100 dark:border-zinc-800 my-4;
+}
+
+/* 图标通用样式 */
+.icon-base {
+  @apply text-zinc-500 dark:text-zinc-400;
 }

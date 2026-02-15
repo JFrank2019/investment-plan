@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useInvestmentStore } from '@/stores/investment'
 import { formatMoney, type SimulationParams } from '@/engine'
-import { Wallet, PiggyBank, TrendingUp, RefreshCw, Clock } from 'lucide-vue-next'
+import { Wallet, PiggyBank, TrendingUp, RefreshCw } from 'lucide-vue-next'
 import RangeSlider from './RangeSlider.vue'
 import PresetSelector from './PresetSelector.vue'
 
@@ -89,280 +89,194 @@ function handleInflationRateChange(event: Event) {
 </script>
 
 <template>
-  <div class="space-y-3 sm:space-y-6">
-    <!-- 预设模板选择器 -->
+  <div class="space-y-6">
+    <!-- 预设模板 -->
     <PresetSelector />
 
-    <div class="grid gap-3 sm:gap-6 lg:grid-cols-2">
-      <!-- 初始资金配置 -->
-    <div class="glass-card p-4 sm:p-6">
-      <div class="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
-        <div
-          class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 sm:h-10 sm:w-10 dark:bg-blue-500/20"
-        >
-          <Wallet class="h-4 w-4 text-blue-600 sm:h-5 sm:w-5 dark:text-blue-400" />
-        </div>
-        <h3 class="text-base font-semibold text-zinc-900 sm:text-lg dark:text-white">初始资金</h3>
-      </div>
-
-      <div class="space-y-3 sm:space-y-4">
-        <div>
-          <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
-            初始资金总额
-          </label>
-          <div class="relative">
-            <input
-              type="number"
-              :value="store.params.initialCapital"
-              @input="handleInitialCapitalChange"
-              class="money-text input-field pr-10 text-sm sm:pr-12"
-              min="0"
-              step="10000"
-            />
-            <span
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-500 sm:right-4 sm:text-sm dark:text-zinc-400"
-            >
-              元
-            </span>
-          </div>
-          <p class="money-text mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-            {{ formatMoney(store.params.initialCapital) }}
-          </p>
-        </div>
-
-        <div>
-          <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
-            初始偏股比例：{{ (store.params.initialEquityRatio * 100).toFixed(0) }}%
-          </label>
-          <RangeSlider
-            :model-value="store.params.initialEquityRatio * 100"
-            @update:model-value="updateEquityRatio"
-            :min="0"
-            :max="100"
-            :step="5"
-            accent-color="blue"
-          />
-          <div class="mt-0.5 flex justify-between text-xs text-zinc-500 dark:text-zinc-400">
-            <span>偏股 {{ (store.params.initialEquityRatio * 100).toFixed(0) }}%</span>
-            <span>偏债 {{ ((1 - store.params.initialEquityRatio) * 100).toFixed(0) }}%</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 定投配置 -->
-    <div class="glass-card p-4 sm:p-6">
-      <div class="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
-        <div
-          class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 sm:h-10 sm:w-10 dark:bg-emerald-500/20"
-        >
-          <PiggyBank class="h-4 w-4 text-emerald-600 sm:h-5 sm:w-5 dark:text-emerald-400" />
-        </div>
-        <h3 class="text-base font-semibold text-zinc-900 sm:text-lg dark:text-white">定投计划</h3>
-      </div>
-
-      <div class="space-y-3 sm:space-y-4">
-        <div>
-          <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
-            每周定投金额
-          </label>
-          <div class="relative">
-            <input
-              type="number"
-              :value="store.params.weeklyInvestment"
-              @input="handleWeeklyInvestmentChange"
-              class="money-text input-field pr-12 text-sm"
-              min="0"
-              step="100"
-            />
-            <span
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-500 sm:right-4 sm:text-sm dark:text-zinc-400"
-            >
-              元/周
-            </span>
-          </div>
-          <p class="money-text mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-            约 {{ formatMoney(monthlyInvestment) }}/月
-          </p>
-        </div>
-
-        <div>
-          <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
-            定投偏股比例：{{ (store.params.investEquityRatio * 100).toFixed(0) }}%
-          </label>
-          <RangeSlider
-            :model-value="store.params.investEquityRatio * 100"
-            @update:model-value="updateInvestEquityRatio"
-            :min="0"
-            :max="100"
-            :step="5"
-            accent-color="blue"
-          />
-          <div class="mt-0.5 flex justify-between text-xs text-zinc-500 dark:text-zinc-400">
-            <span>偏股 {{ (store.params.investEquityRatio * 100).toFixed(0) }}%</span>
-            <span>偏债 {{ ((1 - store.params.investEquityRatio) * 100).toFixed(0) }}%</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 收益率配置 -->
-    <div class="glass-card p-4 sm:p-6">
-      <div class="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
-        <div
-          class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 sm:h-10 sm:w-10 dark:bg-blue-500/20"
-        >
-          <TrendingUp class="h-4 w-4 text-blue-600 sm:h-5 sm:w-5 dark:text-blue-400" />
-        </div>
-        <h3 class="text-base font-semibold text-zinc-900 sm:text-lg dark:text-white">收益率预期</h3>
-      </div>
-
-      <div class="space-y-3 sm:space-y-4">
-        <div class="grid grid-cols-2 gap-2 sm:gap-4">
+    <!-- 配置面板 -->
+    <div class="data-panel p-6">
+      <!-- 1. 初始资金 -->
+      <div class="mb-8">
+        <h3 class="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
+          <Wallet class="h-4 w-4 icon-base" />
+          初始资金
+        </h3>
+        <div class="grid gap-6 sm:grid-cols-2">
           <div>
-            <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
-              偏股年化收益率
+            <label class="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              资金总额
             </label>
             <div class="relative">
               <input
                 type="number"
-                :value="(store.params.equityReturn * 100).toFixed(1)"
-                @input="handleEquityReturnChange"
-                class="input-field pr-6 text-sm sm:pr-8"
-                step="0.5"
-              />
-              <span
-                class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-500 sm:right-3 sm:text-sm dark:text-zinc-400"
-              >
-                %
-              </span>
-            </div>
-          </div>
-          <div>
-            <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
-              偏股波动率
-            </label>
-            <div class="relative">
-              <input
-                type="number"
-                :value="(store.params.equityVolatility * 100).toFixed(1)"
-                @input="handleEquityVolatilityChange"
-                class="input-field pr-6 text-sm sm:pr-8"
-                step="1"
-              />
-              <span
-                class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-500 sm:right-3 sm:text-sm dark:text-zinc-400"
-              >
-                %
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2 sm:gap-4">
-          <div>
-            <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
-              偏债年化收益率
-            </label>
-            <div class="relative">
-              <input
-                type="number"
-                :value="(store.params.bondReturn * 100).toFixed(1)"
-                @input="handleBondReturnChange"
-                class="input-field pr-6 text-sm sm:pr-8"
-                step="0.5"
-              />
-              <span
-                class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-500 sm:right-3 sm:text-sm dark:text-zinc-400"
-              >
-                %
-              </span>
-            </div>
-          </div>
-          <div>
-            <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
-              偏债波动率
-            </label>
-            <div class="relative">
-              <input
-                type="number"
-                :value="(store.params.bondVolatility * 100).toFixed(1)"
-                @input="handleBondVolatilityChange"
-                class="input-field pr-6 text-sm sm:pr-8"
-                step="0.5"
-              />
-              <span
-                class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-500 sm:right-3 sm:text-sm dark:text-zinc-400"
-              >
-                %
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 再平衡与模拟配置 -->
-    <div class="glass-card p-4 sm:p-6">
-      <div class="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
-        <div
-          class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 sm:h-10 sm:w-10 dark:bg-amber-500/20"
-        >
-          <RefreshCw class="h-4 w-4 text-amber-600 sm:h-5 sm:w-5 dark:text-amber-400" />
-        </div>
-        <h3 class="text-base font-semibold text-zinc-900 sm:text-lg dark:text-white">再平衡与模拟</h3>
-      </div>
-
-      <div class="space-y-3 sm:space-y-4">
-        <div class="grid grid-cols-2 gap-2 sm:gap-4">
-          <div>
-            <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
-              再平衡周期
-            </label>
-            <select
-              :value="store.params.rebalancePeriod"
-              @change="handleRebalancePeriodChange"
-              class="input-field text-sm"
-            >
-              <option :value="0">不再平衡</option>
-              <option :value="3">每季度</option>
-              <option :value="6">每半年</option>
-              <option :value="12">每年</option>
-            </select>
-          </div>
-          <div>
-            <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
-              目标偏股比例
-            </label>
-            <div class="relative">
-              <input
-                type="number"
-                :value="(store.params.rebalanceTargetEquityRatio * 100).toFixed(0)"
-                @input="updateRebalanceRatio(Number(($event.target as HTMLInputElement).value) || 0)"
-                class="input-field pr-6 text-sm sm:pr-8"
+                :value="store.params.initialCapital"
+                @input="handleInitialCapitalChange"
+                class="input-field pr-10"
                 min="0"
-                max="100"
-                step="5"
-                :disabled="store.params.rebalancePeriod === 0"
+                step="10000"
               />
-              <span
-                class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-500 sm:right-3 sm:text-sm dark:text-zinc-400"
-              >
-                %
-              </span>
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400">CNY</span>
+            </div>
+            <p class="mt-1 font-mono text-xs text-zinc-400">
+              {{ formatMoney(store.params.initialCapital) }}
+            </p>
+          </div>
+
+          <div>
+            <label class="mb-1.5 flex justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              <span>偏股比例</span>
+              <span class="font-mono">{{ (store.params.initialEquityRatio * 100).toFixed(0) }}%</span>
+            </label>
+            <RangeSlider
+              :model-value="store.params.initialEquityRatio * 100"
+              @update:model-value="updateEquityRatio"
+              :min="0"
+              :max="100"
+              :step="5"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- 2. 定投计划 -->
+      <div class="mb-8">
+        <h3 class="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
+          <PiggyBank class="h-4 w-4 icon-base" />
+          定投计划
+        </h3>
+        <div class="grid gap-6 sm:grid-cols-2">
+          <div>
+            <label class="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              每周定投
+            </label>
+            <div class="relative">
+              <input
+                type="number"
+                :value="store.params.weeklyInvestment"
+                @input="handleWeeklyInvestmentChange"
+                class="input-field pr-12"
+                min="0"
+                step="100"
+              />
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400">CNY/W</span>
+            </div>
+            <p class="mt-1 font-mono text-xs text-zinc-400">
+              ≈ {{ formatMoney(monthlyInvestment) }} / Mo
+            </p>
+          </div>
+
+          <div>
+            <label class="mb-1.5 flex justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              <span>定投偏股比例</span>
+              <span class="font-mono">{{ (store.params.investEquityRatio * 100).toFixed(0) }}%</span>
+            </label>
+            <RangeSlider
+              :model-value="store.params.investEquityRatio * 100"
+              @update:model-value="updateInvestEquityRatio"
+              :min="0"
+              :max="100"
+              :step="5"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- 3. 市场预期 -->
+      <div class="mb-8">
+        <h3 class="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
+          <TrendingUp class="h-4 w-4 icon-base" />
+          市场预期 (年化)
+        </h3>
+        <div class="grid gap-6 sm:grid-cols-2">
+          <!-- 权益类 -->
+          <div class="space-y-4">
+            <h4 class="text-xs font-medium text-zinc-900 dark:text-zinc-100">权益类资产 (Equity)</h4>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="mb-1 block text-[10px] text-zinc-400">收益率</label>
+                <div class="relative">
+                  <input
+                    type="number"
+                    :value="(store.params.equityReturn * 100).toFixed(1)"
+                    @input="handleEquityReturnChange"
+                    class="input-field pr-6"
+                    step="0.5"
+                  />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">%</span>
+                </div>
+              </div>
+              <div>
+                <label class="mb-1 block text-[10px] text-zinc-400">波动率</label>
+                <div class="relative">
+                  <input
+                    type="number"
+                    :value="(store.params.equityVolatility * 100).toFixed(1)"
+                    @input="handleEquityVolatilityChange"
+                    class="input-field pr-6"
+                    step="1"
+                  />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 固收类 -->
+          <div class="space-y-4">
+            <h4 class="text-xs font-medium text-zinc-900 dark:text-zinc-100">固收类资产 (Bond)</h4>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="mb-1 block text-[10px] text-zinc-400">收益率</label>
+                <div class="relative">
+                  <input
+                    type="number"
+                    :value="(store.params.bondReturn * 100).toFixed(1)"
+                    @input="handleBondReturnChange"
+                    class="input-field pr-6"
+                    step="0.5"
+                  />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">%</span>
+                </div>
+              </div>
+              <div>
+                <label class="mb-1 block text-[10px] text-zinc-400">波动率</label>
+                <div class="relative">
+                  <input
+                    type="number"
+                    :value="(store.params.bondVolatility * 100).toFixed(1)"
+                    @input="handleBondVolatilityChange"
+                    class="input-field pr-6"
+                    step="0.5"
+                  />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">%</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="grid grid-cols-2 gap-2 sm:gap-4">
+      <div class="section-divider"></div>
+
+      <!-- 4. 模拟参数 -->
+      <div>
+        <h3 class="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
+          <RefreshCw class="h-4 w-4 icon-base" />
+          模拟参数
+        </h3>
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
+            <label class="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
               模拟时长
             </label>
             <select
               :value="store.params.simulationMonths"
               @change="handleSimulationMonthsChange"
-              class="input-field text-sm"
+              class="input-field"
             >
               <option :value="6">6个月</option>
               <option :value="12">1年</option>
@@ -372,88 +286,89 @@ function handleInflationRateChange(event: Event) {
               <option :value="120">10年</option>
             </select>
           </div>
+
           <div>
-            <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
-              模拟路径数
+            <label class="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              再平衡周期
+            </label>
+            <select
+              :value="store.params.rebalancePeriod"
+              @change="handleRebalancePeriodChange"
+              class="input-field"
+            >
+              <option :value="0">不平衡</option>
+              <option :value="3">每季度</option>
+              <option :value="6">每半年</option>
+              <option :value="12">每年</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              模拟路径
             </label>
             <select
               :value="store.params.monteCarloPathCount"
               @change="handleMonteCarloPathCountChange"
-              class="input-field text-sm"
+              class="input-field"
             >
-              <option :value="100">100条（快速）</option>
-              <option :value="500">500条</option>
-              <option :value="1000">1000条（推荐）</option>
-              <option :value="5000">5000条（精确）</option>
+              <option :value="100">100 (Fast)</option>
+              <option :value="500">500</option>
+              <option :value="1000">1000 (Rec)</option>
+              <option :value="5000">5000 (Slow)</option>
             </select>
           </div>
-        </div>
 
-        <div>
-          <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
-            年化通胀率
-          </label>
-          <div class="relative">
-            <input
-              type="number"
-              :value="(store.params.inflationRate * 100).toFixed(1)"
-              @input="handleInflationRateChange"
-              class="input-field pr-6 text-sm sm:pr-8"
-              step="0.1"
-              min="0"
-              max="20"
-            />
-            <span
-              class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-500 sm:right-3 sm:text-sm dark:text-zinc-400"
-            >
-              %
-            </span>
+          <div>
+            <label class="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              通胀率
+            </label>
+            <div class="relative">
+              <input
+                type="number"
+                :value="(store.params.inflationRate * 100).toFixed(1)"
+                @input="handleInflationRateChange"
+                class="input-field pr-6"
+                step="0.1"
+              />
+              <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">%</span>
+            </div>
           </div>
-          <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-            用于计算实际购买力，默认 2.5%
-          </p>
         </div>
       </div>
     </div>
 
-    <!-- 投入汇总 -->
-    <div class="glass-card col-span-full p-4 sm:p-6">
-      <div class="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
-        <div
-          class="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 sm:h-10 sm:w-10 dark:bg-white/10"
-        >
-          <Clock class="h-4 w-4 text-zinc-600 sm:h-5 sm:w-5 dark:text-zinc-400" />
+    <!-- 投入汇总面板 -->
+    <div class="data-panel p-4 bg-zinc-50 dark:bg-zinc-900/50">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div>
+            <p class="text-[10px] uppercase tracking-wider text-zinc-500">Total Invested</p>
+            <p class="font-mono text-lg font-bold text-zinc-900 dark:text-white">
+              {{ formatMoney(totalInvestment) }}
+            </p>
+          </div>
+          <div class="h-8 w-px bg-zinc-200 dark:bg-zinc-800"></div>
+          <div>
+            <p class="text-[10px] uppercase tracking-wider text-zinc-500">Initial</p>
+            <p class="font-mono text-sm text-zinc-700 dark:text-zinc-300">
+              {{ formatMoney(store.params.initialCapital) }}
+            </p>
+          </div>
+          <div>
+            <p class="text-[10px] uppercase tracking-wider text-zinc-500">Weekly</p>
+            <p class="font-mono text-sm text-zinc-700 dark:text-zinc-300">
+              {{ formatMoney(store.params.weeklyInvestment) }}
+            </p>
+          </div>
         </div>
-        <h3 class="text-base font-semibold text-zinc-900 sm:text-lg dark:text-white">投入汇总</h3>
-      </div>
-
-      <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
-        <div class="rounded-md bg-zinc-50 p-3 sm:p-4 dark:bg-white/5">
-          <p class="text-xs text-zinc-500 sm:text-sm dark:text-zinc-400">初始本金</p>
-          <p class="money-text mt-0.5 text-base font-semibold text-zinc-900 sm:mt-1 sm:text-xl dark:text-white">
-            {{ formatMoney(store.params.initialCapital) }}
-          </p>
-        </div>
-        <div class="rounded-md bg-zinc-50 p-3 sm:p-4 dark:bg-white/5">
-          <p class="text-xs text-zinc-500 sm:text-sm dark:text-zinc-400">定投总额</p>
-          <p class="money-text mt-0.5 text-base font-semibold text-zinc-900 sm:mt-1 sm:text-xl dark:text-white">
-            {{ formatMoney(totalInvestment - store.params.initialCapital) }}
-          </p>
-        </div>
-        <div class="rounded-md bg-zinc-50 p-3 sm:p-4 dark:bg-white/5">
-          <p class="text-xs text-zinc-500 sm:text-sm dark:text-zinc-400">累计投入</p>
-          <p class="money-text mt-0.5 text-base font-semibold text-blue-600 sm:mt-1 sm:text-xl dark:text-blue-400">
-            {{ formatMoney(totalInvestment) }}
-          </p>
-        </div>
-        <div class="rounded-md bg-zinc-50 p-3 sm:p-4 dark:bg-white/5">
-          <p class="text-xs text-zinc-500 sm:text-sm dark:text-zinc-400">模拟时长</p>
-          <p class="mt-0.5 text-base font-semibold text-zinc-900 sm:mt-1 sm:text-xl dark:text-white">
-            {{ store.params.simulationMonths }}个月
+        <div class="text-right">
+          <p class="text-[10px] uppercase tracking-wider text-zinc-500">Duration</p>
+          <p class="font-mono text-sm font-medium text-zinc-900 dark:text-white">
+            {{ store.params.simulationMonths }} Months
           </p>
         </div>
       </div>
-    </div>
     </div>
   </div>
 </template>
