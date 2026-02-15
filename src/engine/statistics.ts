@@ -184,7 +184,11 @@ export function calculateStatistics(
  * @param riskFreeRate 无风险利率（年化）
  * @param periodsPerYear 每年期数（月度数据为12）
  */
-export function sharpeRatio(returns: number[], riskFreeRate: number, periodsPerYear: number = 12): number {
+export function sharpeRatio(
+  returns: number[],
+  riskFreeRate: number,
+  periodsPerYear: number = 12,
+): number {
   if (returns.length === 0) return 0
 
   const avgReturn = mean(returns)
@@ -205,7 +209,11 @@ export function sharpeRatio(returns: number[], riskFreeRate: number, periodsPerY
  * @param riskFreeRate 无风险利率（年化）
  * @param periodsPerYear 每年期数
  */
-export function sortinoRatio(returns: number[], riskFreeRate: number, periodsPerYear: number = 12): number {
+export function sortinoRatio(
+  returns: number[],
+  riskFreeRate: number,
+  periodsPerYear: number = 12,
+): number {
   if (returns.length === 0) return 0
 
   const avgReturn = mean(returns)
@@ -347,7 +355,9 @@ export function calculateRiskMetrics(
 
   // 计算 VaR
   const var95 = valueAtRisk(finalValues, 95)
-  const finalInvestments = paths.map((p) => p.states[p.states.length - 1]?.cumulativeInvestment ?? 0)
+  const finalInvestments = paths.map(
+    (p) => p.states[p.states.length - 1]?.cumulativeInvestment ?? 0,
+  )
   const avgFinalInvestment = mean(finalInvestments)
   const var95Shortfall = Math.max(0, avgFinalInvestment - var95)
   const var95Percent = avgFinalInvestment > 0 ? var95Shortfall / avgFinalInvestment : 0
@@ -410,4 +420,3 @@ export function formatMoney(value: number): string {
 export function formatPercent(value: number, decimals: number = 2): string {
   return `${(value * 100).toFixed(decimals)}%`
 }
-

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 interface Props {
   modelValue: number
@@ -26,6 +26,13 @@ const sliderRef = ref<HTMLDivElement>()
 const isDragging = ref(false)
 const localValue = ref(props.modelValue)
 
+const getClientX = (event: MouseEvent | TouchEvent): number | null => {
+  if ('touches' in event) {
+    return event.touches[0]?.clientX ?? null
+  }
+  return event.clientX
+}
+
 const percentage = computed(() => {
   const range = props.max - props.min
   if (range <= 0) return 0
@@ -46,7 +53,7 @@ const updateValueFromClientX = (clientX: number) => {
 
   const range = props.max - props.min
   const rawValue = props.min + pct * range
-  
+
   // Snap to step
   const steppedValue = Math.round(rawValue / props.step) * props.step
   const clampedValue = Math.max(props.min, Math.min(props.max, steppedValue))
@@ -58,9 +65,10 @@ const updateValueFromClientX = (clientX: number) => {
 const handleStart = (e: MouseEvent | TouchEvent) => {
   if (props.disabled) return
   isDragging.value = true
-  const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+  const clientX = getClientX(e)
+  if (clientX === null) return
   updateValueFromClientX(clientX)
-  
+
   window.addEventListener('mousemove', handleMove)
   window.addEventListener('mouseup', handleEnd)
   window.addEventListener('touchmove', handleMove, { passive: false })
@@ -70,7 +78,8 @@ const handleStart = (e: MouseEvent | TouchEvent) => {
 const handleMove = (e: MouseEvent | TouchEvent) => {
   if (!isDragging.value) return
   e.preventDefault() // Prevent scrolling while dragging
-  const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+  const clientX = getClientX(e)
+  if (clientX === null) return
   updateValueFromClientX(clientX)
 }
 
@@ -82,11 +91,14 @@ const handleEnd = () => {
   window.removeEventListener('touchend', handleEnd)
 }
 
-watch(() => props.modelValue, (newVal) => {
-  if (!isDragging.value) {
-    localValue.value = newVal
-  }
-})
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    if (!isDragging.value) {
+      localValue.value = newVal
+    }
+  },
+)
 </script>
 
 <template>
@@ -103,7 +115,9 @@ watch(() => props.modelValue, (newVal) => {
       <div
         class="h-full transition-all duration-75 ease-out"
         :class="[
-          accentColor === 'blue' ? 'bg-blue-600 dark:bg-blue-500' : 'bg-emerald-600 dark:bg-emerald-500'
+          accentColor === 'blue'
+            ? 'bg-blue-600 dark:bg-blue-500'
+            : 'bg-emerald-600 dark:bg-emerald-500',
         ]"
         :style="{ width: `${percentage}%` }"
       ></div>
@@ -113,8 +127,10 @@ watch(() => props.modelValue, (newVal) => {
     <div
       class="absolute h-4 w-4 -translate-x-1/2 rounded-full bg-white border-2 shadow-sm transition-transform duration-100 ease-out dark:bg-zinc-900"
       :class="[
-        accentColor === 'blue' ? 'border-blue-600 dark:border-blue-500' : 'border-emerald-600 dark:border-emerald-500',
-        isDragging ? 'scale-125' : 'scale-100'
+        accentColor === 'blue'
+          ? 'border-blue-600 dark:border-blue-500'
+          : 'border-emerald-600 dark:border-emerald-500',
+        isDragging ? 'scale-125' : 'scale-100',
       ]"
       :style="{ left: `${percentage}%` }"
     ></div>

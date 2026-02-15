@@ -7,9 +7,15 @@ import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 const ConfigPanel = defineAsyncComponent(() => import('@/components/config/ConfigPanel.vue'))
 const StatsCards = defineAsyncComponent(() => import('@/components/stats/StatsCards.vue'))
 const RiskMetricsCard = defineAsyncComponent(() => import('@/components/stats/RiskMetricsCard.vue'))
-const AssetGrowthChart = defineAsyncComponent(() => import('@/components/charts/AssetGrowthChart.vue'))
-const DistributionChart = defineAsyncComponent(() => import('@/components/charts/DistributionChart.vue'))
-const AllocationChart = defineAsyncComponent(() => import('@/components/charts/AllocationChart.vue'))
+const AssetGrowthChart = defineAsyncComponent(
+  () => import('@/components/charts/AssetGrowthChart.vue'),
+)
+const DistributionChart = defineAsyncComponent(
+  () => import('@/components/charts/DistributionChart.vue'),
+)
+const AllocationChart = defineAsyncComponent(
+  () => import('@/components/charts/AllocationChart.vue'),
+)
 
 const store = useInvestmentStore()
 const activeTab = ref<'config' | 'results'>('config')
@@ -48,36 +54,26 @@ function handleCancelSimulation() {
     <!-- Header -->
     <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">投资收益模拟器</h1>
+        <h1 class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+          投资收益模拟器
+        </h1>
         <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
           基于蒙特卡洛模拟的长期资产配置预测工具
         </p>
       </div>
 
       <div class="flex items-center gap-3">
-        <button
-          @click="handleResetClick"
-          class="btn-secondary"
-          title="重置参数"
-        >
+        <button @click="handleResetClick" class="btn-secondary" title="重置参数">
           <RefreshCw class="h-4 w-4" />
           <span class="hidden sm:inline">重置</span>
         </button>
-        
-        <button
-          v-if="store.isCalculating"
-          @click="handleCancelSimulation"
-          class="btn-danger"
-        >
+
+        <button v-if="store.isCalculating" @click="handleCancelSimulation" class="btn-danger">
           <Square class="h-3.5 w-3.5 fill-current" />
           <span>取消</span>
         </button>
 
-        <button
-          @click="handleRunSimulation"
-          :disabled="store.isCalculating"
-          class="btn-primary"
-        >
+        <button @click="handleRunSimulation" :disabled="store.isCalculating" class="btn-primary">
           <RefreshCw v-if="store.isCalculating" class="h-4 w-4 animate-spin" />
           <Play v-else class="h-4 w-4 fill-current" />
           <span>{{ store.isCalculating ? '计算中...' : '运行模拟' }}</span>
@@ -106,7 +102,9 @@ function handleCancelSimulation() {
         <div>
           <h3 class="text-sm font-medium text-amber-900 dark:text-amber-200">参数提醒</h3>
           <ul class="mt-1 list-inside list-disc text-sm text-amber-800 dark:text-amber-300">
-            <li v-for="(warning, index) in store.warnings" :key="`warning-${index}`">{{ warning }}</li>
+            <li v-for="(warning, index) in store.warnings" :key="`warning-${index}`">
+              {{ warning }}
+            </li>
           </ul>
         </div>
       </div>
@@ -137,7 +135,7 @@ function handleCancelSimulation() {
             activeTab === 'config'
               ? 'border-zinc-900 text-zinc-900 dark:border-white dark:text-white'
               : 'border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:text-zinc-300',
-            'group flex items-center border-b-2 py-4 px-1 text-sm font-medium transition-colors'
+            'group flex items-center border-b-2 py-4 px-1 text-sm font-medium transition-colors',
           ]"
         >
           <Settings2 class="mr-2 h-4 w-4" />
@@ -151,7 +149,7 @@ function handleCancelSimulation() {
               ? 'border-zinc-900 text-zinc-900 dark:border-white dark:text-white'
               : 'border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:text-zinc-300',
             !store.hasCalculated && !store.isCalculating ? 'cursor-not-allowed opacity-50' : '',
-            'group flex items-center border-b-2 py-4 px-1 text-sm font-medium transition-colors'
+            'group flex items-center border-b-2 py-4 px-1 text-sm font-medium transition-colors',
           ]"
         >
           <BarChart2 class="mr-2 h-4 w-4" />
@@ -179,11 +177,17 @@ function handleCancelSimulation() {
     </div>
 
     <div v-else-if="activeTab === 'results' && store.isCalculating" class="space-y-8">
-      <div class="rounded-sm border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900">
+      <div
+        class="rounded-sm border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900"
+      >
         <p class="text-sm text-zinc-600 dark:text-zinc-400">正在计算最新模拟结果，请稍候...</p>
       </div>
       <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div v-for="idx in 8" :key="`loading-stats-${idx}`" class="h-28 animate-pulse bg-zinc-100 dark:bg-zinc-800"></div>
+        <div
+          v-for="idx in 8"
+          :key="`loading-stats-${idx}`"
+          class="h-28 animate-pulse bg-zinc-100 dark:bg-zinc-800"
+        ></div>
       </div>
       <div class="grid gap-8 lg:grid-cols-2">
         <div class="h-[400px] animate-pulse bg-zinc-100 dark:bg-zinc-800"></div>
@@ -200,7 +204,11 @@ function handleCancelSimulation() {
         </template>
         <template #fallback>
           <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <div v-for="idx in 4" :key="idx" class="h-28 animate-pulse bg-zinc-100 dark:bg-zinc-800"></div>
+            <div
+              v-for="idx in 4"
+              :key="idx"
+              class="h-28 animate-pulse bg-zinc-100 dark:bg-zinc-800"
+            ></div>
           </div>
         </template>
       </Suspense>

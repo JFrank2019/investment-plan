@@ -35,7 +35,7 @@ const chartOption = computed(() => {
   const range = max - min
   const isSingleValueDistribution = !Number.isFinite(range) || range <= 0
   const binWidth = isSingleValueDistribution ? 1 : range / binCount
-  const bins: number[] = new Array(binCount).fill(0)
+  const bins: number[] = Array.from({ length: binCount }, () => 0)
 
   finalValues.forEach((v) => {
     const rawBinIndex = Math.floor((v - min) / binWidth)
@@ -205,5 +205,5 @@ const chartOption = computed(() => {
 </script>
 
 <template>
-  <VChart :option="chartOption" autoresize style="height: 100%; min-height: 350px;" />
+  <VChart :option="chartOption" autoresize style="height: 100%; min-height: 350px" />
 </template>

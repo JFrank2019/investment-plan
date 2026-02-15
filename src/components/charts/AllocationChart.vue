@@ -3,7 +3,12 @@ import { computed } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
-import { TitleComponent, TooltipComponent, GridComponent, LegendComponent } from 'echarts/components'
+import {
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+} from 'echarts/components'
 import VChart from 'vue-echarts'
 import { useInvestmentStore } from '@/stores/investment'
 import { formatMonthLabel } from '@/engine'
@@ -144,5 +149,5 @@ const chartOption = computed(() => {
 </script>
 
 <template>
-  <VChart :option="chartOption" autoresize style="height: 100%; min-height: 300px;" />
+  <VChart :option="chartOption" autoresize style="height: 100%; min-height: 300px" />
 </template>

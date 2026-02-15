@@ -149,8 +149,7 @@ function createAssetState(
   // 使用预计算的通胀值，避免在热路径重复指数运算
   const realTotalAsset = totalAsset / (1 + cumulativeInflation)
   const realProfit = realTotalAsset - realCumulativeInvestment
-  const realProfitRate =
-    realCumulativeInvestment > 0 ? realProfit / realCumulativeInvestment : 0
+  const realProfitRate = realCumulativeInvestment > 0 ? realProfit / realCumulativeInvestment : 0
 
   return {
     month,
@@ -170,7 +169,7 @@ function createAssetState(
 
 function buildCumulativeInflationTable(annualInflationRate: number, months: number): number[] {
   const monthlyInflation = annualToMonthlyInflation(annualInflationRate)
-  const table = new Array<number>(months + 1).fill(0)
+  const table = Array.from({ length: months + 1 }, () => 0)
   let inflationFactor = 1
 
   for (let month = 1; month <= months; month++) {

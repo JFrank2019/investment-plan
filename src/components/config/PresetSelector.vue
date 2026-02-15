@@ -85,22 +85,17 @@ function handleApplyPreset(preset: PortfolioPreset) {
                 {{ preset.name }}
               </h4>
             </div>
-            <p
-              class="mt-1 line-clamp-2 text-[10px] text-zinc-500 dark:text-zinc-400"
-            >
+            <p class="mt-1 line-clamp-2 text-[10px] text-zinc-500 dark:text-zinc-400">
               {{ preset.description }}
             </p>
           </div>
-          
+
           <!-- Risk Badge -->
           <span
             :class="[
-              'shrink-0 rounded-sm px-1.5 py-0.5 text-[10px] font-medium border',
-              preset.riskLevel === 'high' 
-                ? 'border-red-200 text-red-700 bg-red-50 dark:border-red-900/30 dark:text-red-400 dark:bg-red-900/10'
-                : preset.riskLevel === 'medium'
-                  ? 'border-amber-200 text-amber-700 bg-amber-50 dark:border-amber-900/30 dark:text-amber-400 dark:bg-amber-900/10'
-                  : 'border-emerald-200 text-emerald-700 bg-emerald-50 dark:border-emerald-900/30 dark:text-emerald-400 dark:bg-emerald-900/10'
+              'shrink-0 rounded-sm px-1.5 py-0.5 text-[10px] font-medium',
+              getRiskLevelColor(preset.riskLevel).bg,
+              getRiskLevelColor(preset.riskLevel).text,
             ]"
           >
             {{ getRiskLevelLabel(preset.riskLevel) }}
@@ -108,7 +103,9 @@ function handleApplyPreset(preset: PortfolioPreset) {
         </div>
 
         <!-- Mini Stats -->
-        <div class="mt-3 grid grid-cols-3 gap-2 border-t border-zinc-100 pt-3 text-[10px] dark:border-zinc-800/50">
+        <div
+          class="mt-3 grid grid-cols-3 gap-2 border-t border-zinc-100 pt-3 text-[10px] dark:border-zinc-800/50"
+        >
           <div>
             <span class="text-zinc-400">Equity</span>
             <p class="font-mono font-medium text-zinc-700 dark:text-zinc-300">

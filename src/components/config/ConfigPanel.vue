@@ -23,10 +23,6 @@ function updateInvestEquityRatio(value: number) {
   store.updateParams({ investEquityRatio: value / 100 })
 }
 
-function updateRebalanceRatio(value: number) {
-  store.updateParams({ rebalanceTargetEquityRatio: value / 100 })
-}
-
 function getNumericValue(event: Event): number {
   const target = event.target
   if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) {
@@ -97,7 +93,9 @@ function handleInflationRateChange(event: Event) {
     <div class="data-panel p-6">
       <!-- 1. 初始资金 -->
       <div class="mb-8">
-        <h3 class="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
+        <h3
+          class="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white"
+        >
           <Wallet class="h-4 w-4 icon-base" />
           初始资金
         </h3>
@@ -115,7 +113,9 @@ function handleInflationRateChange(event: Event) {
                 min="0"
                 step="10000"
               />
-              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400">CNY</span>
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400"
+                >CNY</span
+              >
             </div>
             <p class="mt-1 font-mono text-xs text-zinc-400">
               {{ formatMoney(store.params.initialCapital) }}
@@ -123,9 +123,13 @@ function handleInflationRateChange(event: Event) {
           </div>
 
           <div>
-            <label class="mb-1.5 flex justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            <label
+              class="mb-1.5 flex justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400"
+            >
               <span>偏股比例</span>
-              <span class="font-mono">{{ (store.params.initialEquityRatio * 100).toFixed(0) }}%</span>
+              <span class="font-mono"
+                >{{ (store.params.initialEquityRatio * 100).toFixed(0) }}%</span
+              >
             </label>
             <RangeSlider
               :model-value="store.params.initialEquityRatio * 100"
@@ -142,7 +146,9 @@ function handleInflationRateChange(event: Event) {
 
       <!-- 2. 定投计划 -->
       <div class="mb-8">
-        <h3 class="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
+        <h3
+          class="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white"
+        >
           <PiggyBank class="h-4 w-4 icon-base" />
           定投计划
         </h3>
@@ -160,7 +166,9 @@ function handleInflationRateChange(event: Event) {
                 min="0"
                 step="100"
               />
-              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400">CNY/W</span>
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400"
+                >CNY/W</span
+              >
             </div>
             <p class="mt-1 font-mono text-xs text-zinc-400">
               ≈ {{ formatMoney(monthlyInvestment) }} / Mo
@@ -168,9 +176,13 @@ function handleInflationRateChange(event: Event) {
           </div>
 
           <div>
-            <label class="mb-1.5 flex justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            <label
+              class="mb-1.5 flex justify-between text-xs font-medium text-zinc-500 dark:text-zinc-400"
+            >
               <span>定投偏股比例</span>
-              <span class="font-mono">{{ (store.params.investEquityRatio * 100).toFixed(0) }}%</span>
+              <span class="font-mono"
+                >{{ (store.params.investEquityRatio * 100).toFixed(0) }}%</span
+              >
             </label>
             <RangeSlider
               :model-value="store.params.investEquityRatio * 100"
@@ -187,14 +199,18 @@ function handleInflationRateChange(event: Event) {
 
       <!-- 3. 市场预期 -->
       <div class="mb-8">
-        <h3 class="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
+        <h3
+          class="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white"
+        >
           <TrendingUp class="h-4 w-4 icon-base" />
           市场预期 (年化)
         </h3>
         <div class="grid gap-6 sm:grid-cols-2">
           <!-- 权益类 -->
           <div class="space-y-4">
-            <h4 class="text-xs font-medium text-zinc-900 dark:text-zinc-100">权益类资产 (Equity)</h4>
+            <h4 class="text-xs font-medium text-zinc-900 dark:text-zinc-100">
+              权益类资产 (Equity)
+            </h4>
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="mb-1 block text-[10px] text-zinc-400">收益率</label>
@@ -206,7 +222,9 @@ function handleInflationRateChange(event: Event) {
                     class="input-field pr-6"
                     step="0.5"
                   />
-                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">%</span>
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400"
+                    >%</span
+                  >
                 </div>
               </div>
               <div>
@@ -219,7 +237,9 @@ function handleInflationRateChange(event: Event) {
                     class="input-field pr-6"
                     step="1"
                   />
-                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">%</span>
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400"
+                    >%</span
+                  >
                 </div>
               </div>
             </div>
@@ -239,7 +259,9 @@ function handleInflationRateChange(event: Event) {
                     class="input-field pr-6"
                     step="0.5"
                   />
-                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">%</span>
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400"
+                    >%</span
+                  >
                 </div>
               </div>
               <div>
@@ -252,7 +274,9 @@ function handleInflationRateChange(event: Event) {
                     class="input-field pr-6"
                     step="0.5"
                   />
-                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">%</span>
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400"
+                    >%</span
+                  >
                 </div>
               </div>
             </div>
@@ -264,7 +288,9 @@ function handleInflationRateChange(event: Event) {
 
       <!-- 4. 模拟参数 -->
       <div>
-        <h3 class="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white">
+        <h3
+          class="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white"
+        >
           <RefreshCw class="h-4 w-4 icon-base" />
           模拟参数
         </h3>

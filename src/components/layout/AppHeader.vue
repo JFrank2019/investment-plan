@@ -5,13 +5,13 @@ import ThemeToggle from './ThemeToggle.vue'
 
 const route = useRoute()
 
-const navItems = [
-  { path: '/simulator', label: '模拟器', icon: BarChart3 },
-]
+const navItems = [{ path: '/simulator', label: '模拟器', icon: BarChart3 }]
 </script>
 
 <template>
-  <header class="sticky top-0 z-50 w-full border-b border-zinc-200 bg-white/80 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80">
+  <header
+    class="sticky top-0 z-50 w-full border-b border-zinc-200 bg-white/80 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80"
+  >
     <div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
       <!-- Logo -->
       <RouterLink to="/" class="flex items-center gap-2.5 group">
@@ -20,7 +20,9 @@ const navItems = [
         >
           <TrendingUp class="h-4 w-4" />
         </div>
-        <span class="font-mono text-sm font-bold tracking-tight text-zinc-900 dark:text-white">INVEST.PLAN</span>
+        <span class="font-mono text-sm font-bold tracking-tight text-zinc-900 dark:text-white"
+          >INVEST.PLAN</span
+        >
       </RouterLink>
 
       <!-- Navigation -->

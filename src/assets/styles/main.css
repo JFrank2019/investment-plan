@@ -45,7 +45,9 @@
 
 /* 基础样式 */
 html {
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 body {
@@ -89,12 +91,14 @@ body {
 .data-panel {
   background-color: var(--panel-bg);
   border: 1px solid var(--border-color);
-  @apply rounded-sm; 
+  @apply rounded-sm;
 }
 
 /* 交互式面板 hover 效果 */
 .data-panel--interactive {
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 .data-panel--interactive:hover {
   border-color: var(--text-secondary);

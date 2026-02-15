@@ -60,11 +60,7 @@ function handleBackdropClick(e: MouseEvent) {
           leave-from-class="opacity-100 scale-100 translate-y-0"
           leave-to-class="opacity-0 scale-95 translate-y-2"
         >
-          <div
-            v-if="open"
-            class="data-panel w-full max-w-sm p-6 shadow-xl"
-            @click.stop
-          >
+          <div v-if="open" class="data-panel w-full max-w-sm p-6 shadow-xl" @click.stop>
             <h3 class="mb-2 text-lg font-semibold text-zinc-900 dark:text-white">
               {{ title }}
             </h3>
@@ -72,16 +68,10 @@ function handleBackdropClick(e: MouseEvent) {
               {{ message }}
             </p>
             <div class="flex gap-3 justify-end">
-              <button
-                @click="handleCancel"
-                class="btn-secondary"
-              >
+              <button @click="handleCancel" class="btn-secondary">
                 {{ cancelText }}
               </button>
-              <button
-                @click="handleConfirm"
-                class="btn-primary"
-              >
+              <button @click="handleConfirm" class="btn-primary">
                 {{ confirmText }}
               </button>
             </div>

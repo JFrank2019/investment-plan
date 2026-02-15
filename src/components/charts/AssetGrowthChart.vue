@@ -37,9 +37,6 @@ const chartOption = computed(() => {
 
   // 实际购买力数据
   const realDeterministicValues = deterministicData.map((s) => s.realTotalAsset)
-  const realMedianValues = confidenceBands.map((b) => b.realMedian ?? b.median)
-  const realP5Values = confidenceBands.map((b) => b.realP5 ?? b.p5)
-  const realP95Values = confidenceBands.map((b) => b.realP95 ?? b.p95)
 
   // Theme Colors (Slate / Financial Navy)
   const textColor = isDark.value ? '#94a3b8' : '#64748b' // Slate 400 / 500
@@ -67,13 +64,15 @@ const chartOption = computed(() => {
         color: isDark.value ? '#f8fafc' : '#0f172a',
         ...getMoneyTextStyle(),
       },
-      formatter: (params: any[]) => {
+      formatter: (
+        params: Array<{ axisValue?: string; value?: number; color?: string; seriesName?: string }>,
+      ) => {
         const month = params[0]?.axisValue ?? ''
         let html = `<div class="font-medium mb-2 border-b border-zinc-100 dark:border-zinc-800 pb-1">${month}</div>`
         params.forEach((p) => {
           if (p.value !== undefined) {
             // 只显示关键指标，避免太多
-            if (p.seriesName.includes('下界')) return
+            if (p.seriesName?.includes('下界')) return
             html += `
               <div class="flex justify-between gap-4 text-xs mb-1">
                 <span style="color: ${p.color}">${p.seriesName}</span>
@@ -114,7 +113,7 @@ const chartOption = computed(() => {
         color: textColor,
         fontSize: 11,
         ...getMoneyAxisLabel(),
-        formatter: (value: number) => formatMoney(value, 0),
+        formatter: (value: number) => formatMoney(value),
       },
     },
     series: [
@@ -142,7 +141,7 @@ const chartOption = computed(() => {
         symbol: 'none',
         tooltip: { show: false },
       },
-      
+
       // 核心曲线
       {
         name: '确定性预测',
@@ -187,5 +186,5 @@ const chartOption = computed(() => {
 
 <template>
   <!-- Removed wrapper div, chart takes full height of parent -->
-  <VChart :option="chartOption" autoresize style="height: 100%; min-height: 350px;" />
+  <VChart :option="chartOption" autoresize style="height: 100%; min-height: 350px" />
 </template>

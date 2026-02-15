@@ -293,7 +293,11 @@ export function validateParams(params: SimulationParams): string[] {
   if (params.bondVolatility < 0 || params.bondVolatility > 0.5) {
     errors.push('偏债波动率必须在0-50%之间')
   }
-  if (params.rebalancePeriod < 0 || params.rebalancePeriod > 120 || !Number.isInteger(params.rebalancePeriod)) {
+  if (
+    params.rebalancePeriod < 0 ||
+    params.rebalancePeriod > 120 ||
+    !Number.isInteger(params.rebalancePeriod)
+  ) {
     errors.push('再平衡周期必须为0-120的整数（月）')
   }
   if (params.rebalanceTargetEquityRatio < 0 || params.rebalanceTargetEquityRatio > 1) {
