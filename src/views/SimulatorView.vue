@@ -145,12 +145,12 @@ function handleCancelSimulation() {
         </button>
         <button
           @click="activeTab = 'results'"
-          :disabled="!store.hasCalculated"
+          :disabled="!store.hasCalculated && !store.isCalculating"
           :class="[
             activeTab === 'results'
               ? 'border-zinc-900 text-zinc-900 dark:border-white dark:text-white'
               : 'border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:text-zinc-300',
-            !store.hasCalculated ? 'cursor-not-allowed opacity-50' : '',
+            !store.hasCalculated && !store.isCalculating ? 'cursor-not-allowed opacity-50' : '',
             'group flex items-center border-b-2 py-4 px-1 text-sm font-medium transition-colors'
           ]"
         >
@@ -176,6 +176,20 @@ function handleCancelSimulation() {
           </div>
         </template>
       </Suspense>
+    </div>
+
+    <div v-else-if="activeTab === 'results' && store.isCalculating" class="space-y-8">
+      <div class="rounded-sm border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <p class="text-sm text-zinc-600 dark:text-zinc-400">正在计算最新模拟结果，请稍候...</p>
+      </div>
+      <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div v-for="idx in 8" :key="`loading-stats-${idx}`" class="h-28 animate-pulse bg-zinc-100 dark:bg-zinc-800"></div>
+      </div>
+      <div class="grid gap-8 lg:grid-cols-2">
+        <div class="h-[400px] animate-pulse bg-zinc-100 dark:bg-zinc-800"></div>
+        <div class="h-[400px] animate-pulse bg-zinc-100 dark:bg-zinc-800"></div>
+      </div>
+      <div class="h-[400px] animate-pulse bg-zinc-100 dark:bg-zinc-800"></div>
     </div>
 
     <div v-else-if="activeTab === 'results' && store.hasCalculated" class="space-y-8">

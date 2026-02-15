@@ -56,13 +56,17 @@ export const useInvestmentStore = defineStore('investment', () => {
     hasCalculated.value = false
   }
 
-  // 重置参数
-  function resetParams() {
-    params.value = sanitizeSimulationParams({ ...DEFAULT_PARAMS })
+  function clearSimulationResults() {
     deterministicResult.value = null
     monteCarloResult.value = null
     hasCalculated.value = false
     monteCarloProgress.value = 0
+  }
+
+  // 重置参数
+  function resetParams() {
+    params.value = sanitizeSimulationParams({ ...DEFAULT_PARAMS })
+    clearSimulationResults()
     errors.value = []
   }
 
@@ -90,6 +94,9 @@ export const useInvestmentStore = defineStore('investment', () => {
 
     const safeParams = sanitizeSimulationParams(params.value)
     params.value = safeParams
+
+    // 新一轮计算开始时立即清空旧结果，避免界面展示历史数据
+    clearSimulationResults()
 
     // 验证参数
     errors.value = validateParams(safeParams)
