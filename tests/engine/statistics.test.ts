@@ -7,7 +7,17 @@ import {
   maxDrawdown,
   formatMoney,
   formatPercent,
+  annualToMonthlyInflation,
+  calculateCumulativeInflation,
+  calculateRealValue,
+  calculateRealReturn,
+  sharpeRatio,
+  sortinoRatio,
+  valueAtRisk,
+  conditionalVaR,
+  calculateRiskMetrics,
 } from '@/engine/statistics'
+import type { SimulationPath } from '@/engine/types'
 
 describe('统计函数', () => {
   describe('percentile', () => {
@@ -111,6 +121,306 @@ describe('统计函数', () => {
       expect(formatPercent(0.1234)).toBe('12.34%')
       expect(formatPercent(0.1234, 1)).toBe('12.3%')
       expect(formatPercent(-0.05)).toBe('-5.00%')
+    })
+  })
+
+  describe('通胀计算函数', () => {
+    describe('annualToMonthlyInflation', () => {
+      it('应该正确将年化通胀率转换为月通胀率', () => {
+        const monthly = annualToMonthlyInflation(0.03) // 3% 年化
+        expect(monthly).toBeCloseTo(0.002466, 6)
+      })
+
+      it('零通胀率应该返回0', () => {
+        expect(annualToMonthlyInflation(0)).toBe(0)
+      })
+
+      it('负通胀率应该返回负值', () => {
+        const monthly = annualToMonthlyInflation(-0.02) // -2% 年化
+        expect(monthly).toBeLessThan(0)
+      })
+    })
+
+    describe('calculateCumulativeInflation', () => {
+      it('12个月后的累计通胀应该接近年化通胀率', () => {
+        const cumulative = calculateCumulativeInflation(0.025, 12)
+        expect(cumulative).toBeCloseTo(0.025, 3)
+      })
+
+      it('0个月应该返回0', () => {
+        expect(calculateCumulativeInflation(0.03, 0)).toBe(0)
+      })
+
+      it('24个月后的累计通胀应该约为年化的平方', () => {
+        const cumulative = calculateCumulativeInflation(0.025, 24)
+        const expected = Math.pow(1.025, 2) - 1 // (1+r)^2 - 1
+        expect(cumulative).toBeCloseTo(expected, 4)
+      })
+
+      it('60个月（5年）后的累计通胀应该正确', () => {
+        const cumulative = calculateCumulativeInflation(0.02, 60)
+        const expected = Math.pow(1.02, 5) - 1
+        expect(cumulative).toBeCloseTo(expected, 4)
+      })
+    })
+
+    describe('calculateRealValue', () => {
+      it('应该正确计算实际购买力', () => {
+        const nominal = 110000 // 名义值
+        const cumulativeInflation = 0.1 // 10% 累计通胀
+        const real = calculateRealValue(nominal, cumulativeInflation)
+        expect(real).toBeCloseTo(100000, 0)
+      })
+
+      it('零通胀时实际值等于名义值', () => {
+        expect(calculateRealValue(100000, 0)).toBe(100000)
+      })
+
+      it('高通胀时实际值应该远小于名义值', () => {
+        const real = calculateRealValue(100000, 0.5) // 50% 累计通胀
+        expect(real).toBeCloseTo(66666.67, 0)
+      })
+    })
+
+    describe('calculateRealReturn', () => {
+      it('应该正确计算实际收益率', () => {
+        const nominalReturn = 0.1 // 10% 名义收益
+        const inflation = 0.03 // 3% 通胀
+        const realReturn = calculateRealReturn(nominalReturn, inflation)
+        // 实际收益率 = (1 + 0.1) / (1 + 0.03) - 1 ≈ 0.068
+        expect(realReturn).toBeCloseTo(0.068, 3)
+      })
+
+      it('名义收益率等于通胀率时实际收益率为0', () => {
+        expect(calculateRealReturn(0.03, 0.03)).toBeCloseTo(0, 6)
+      })
+
+      it('负通胀（通缩）时实际收益率应该更高', () => {
+        const realReturn = calculateRealReturn(0.05, -0.02)
+        expect(realReturn).toBeGreaterThan(0.05)
+      })
+    })
+  })
+
+  describe('风险指标函数', () => {
+    describe('sharpeRatio', () => {
+      it('应该正确计算夏普比率', () => {
+        // 使用有变化的收益率数组
+        const returns = [0.06, 0.04, 0.05, 0.07, 0.03]
+        const sr = sharpeRatio(returns, 0.02, 12)
+        // 平均收益 5%，标准差 > 0，无风险利率 2%
+        expect(sr).toBeDefined()
+        expect(typeof sr).toBe('number')
+      })
+
+      it('空数组应该返回0', () => {
+        expect(sharpeRatio([], 0.03)).toBe(0)
+      })
+
+      it('应按公式精确计算（年期=1、无风险利率=0）', () => {
+        const returns = [0.1, 0.2, 0.3]
+        const sr = sharpeRatio(returns, 0, 1)
+        expect(sr).toBeCloseTo(2.449489743, 6)
+      })
+
+      it('高波动率应该导致较低夏普比率', () => {
+        // 低波动率：收益在4%-6%之间
+        const lowVolReturns = [0.05, 0.06, 0.04, 0.05, 0.05]
+        // 高波动率：收益在-5%到25%之间
+        const highVolReturns = [0.15, -0.05, 0.25, -0.15, 0.05]
+
+        const srLow = sharpeRatio(lowVolReturns, 0.03, 12)
+        const srHigh = sharpeRatio(highVolReturns, 0.03, 12)
+
+        expect(srLow).toBeGreaterThan(srHigh)
+      })
+    })
+
+    describe('sortinoRatio', () => {
+      it('只有正收益时索提诺比率应该很高', () => {
+        const returns = [0.05, 0.06, 0.04, 0.07, 0.05]
+        const sr = sortinoRatio(returns, 0.03, 12)
+        expect(sr).toBeGreaterThan(0)
+      })
+
+      it('空数组应该返回0', () => {
+        expect(sortinoRatio([], 0.03)).toBe(0)
+      })
+
+      it('应按下行偏差公式精确计算（年期=1、无风险利率=0）', () => {
+        const returns = [-0.1, 0.1, 0.2]
+        const sr = sortinoRatio(returns, 0, 1)
+        expect(sr).toBeCloseTo(2 / 3, 6)
+      })
+
+      it('有负收益时应该降低索提诺比率', () => {
+        const allPositive = [0.05, 0.06, 0.04, 0.07, 0.05]
+        const withNegative = [0.05, -0.02, 0.04, -0.01, 0.05]
+
+        const srPositive = sortinoRatio(allPositive, 0.02, 12)
+        const srNegative = sortinoRatio(withNegative, 0.02, 12)
+
+        expect(srPositive).toBeGreaterThan(srNegative)
+      })
+    })
+
+    describe('valueAtRisk', () => {
+      it('应该正确计算95% VaR', () => {
+        // 100个从1到100的值
+        const values = Array.from({ length: 100 }, (_, i) => i + 1)
+        const var95 = valueAtRisk(values, 95)
+        // 5%分位数应该在5-6之间（插值）
+        expect(var95).toBeGreaterThanOrEqual(5)
+        expect(var95).toBeLessThanOrEqual(6)
+      })
+
+      it('空数组应该返回0', () => {
+        expect(valueAtRisk([], 95)).toBe(0)
+      })
+
+      it('VaR应该小于等于最大值', () => {
+        const values = [100, 200, 300, 400, 500]
+        const var95 = valueAtRisk(values, 95)
+        expect(var95).toBeLessThanOrEqual(500)
+      })
+    })
+
+    describe('conditionalVaR', () => {
+      it('CVaR应该小于等于VaR', () => {
+        const values = Array.from({ length: 100 }, (_, i) => i + 1)
+        const var95 = valueAtRisk(values, 95)
+        const cvar95 = conditionalVaR(values, 95)
+        expect(cvar95).toBeLessThanOrEqual(var95)
+      })
+
+      it('空数组应该返回0', () => {
+        expect(conditionalVaR([], 95)).toBe(0)
+      })
+
+      it('CVaR应该是尾部损失的平均值', () => {
+        // 5%尾部（最小5个值）的平均值
+        const values = Array.from({ length: 100 }, (_, i) => i + 1)
+        const cvar95 = conditionalVaR(values, 95)
+        // 1+2+3+4+5 / 5 = 3
+        expect(cvar95).toBeCloseTo(3, 0)
+      })
+    })
+
+    describe('calculateRiskMetrics', () => {
+      it('VaR 百分比应相对期末累计投入计算且不为负', () => {
+        const paths: SimulationPath[] = [
+          {
+            states: [
+              {
+                month: 0,
+                equityAsset: 100,
+                bondAsset: 0,
+                totalAsset: 100,
+                equityRatio: 1,
+                cumulativeInvestment: 100,
+                profit: 0,
+                profitRate: 0,
+                cumulativeInflation: 0,
+                realTotalAsset: 100,
+                realProfit: 0,
+                realProfitRate: 0,
+              },
+              {
+                month: 1,
+                equityAsset: 130,
+                bondAsset: 0,
+                totalAsset: 130,
+                equityRatio: 1,
+                cumulativeInvestment: 200,
+                profit: -70,
+                profitRate: -0.35,
+                cumulativeInflation: 0,
+                realTotalAsset: 130,
+                realProfit: -70,
+                realProfitRate: -0.35,
+              },
+            ],
+            finalValue: 130,
+            maxDrawdown: 0,
+            totalReturn: -0.35,
+          },
+          {
+            states: [
+              {
+                month: 0,
+                equityAsset: 100,
+                bondAsset: 0,
+                totalAsset: 100,
+                equityRatio: 1,
+                cumulativeInvestment: 100,
+                profit: 0,
+                profitRate: 0,
+                cumulativeInflation: 0,
+                realTotalAsset: 100,
+                realProfit: 0,
+                realProfitRate: 0,
+              },
+              {
+                month: 1,
+                equityAsset: 150,
+                bondAsset: 0,
+                totalAsset: 150,
+                equityRatio: 1,
+                cumulativeInvestment: 200,
+                profit: -50,
+                profitRate: -0.25,
+                cumulativeInflation: 0,
+                realTotalAsset: 150,
+                realProfit: -50,
+                realProfitRate: -0.25,
+              },
+            ],
+            finalValue: 150,
+            maxDrawdown: 0,
+            totalReturn: -0.25,
+          },
+          {
+            states: [
+              {
+                month: 0,
+                equityAsset: 100,
+                bondAsset: 0,
+                totalAsset: 100,
+                equityRatio: 1,
+                cumulativeInvestment: 100,
+                profit: 0,
+                profitRate: 0,
+                cumulativeInflation: 0,
+                realTotalAsset: 100,
+                realProfit: 0,
+                realProfitRate: 0,
+              },
+              {
+                month: 1,
+                equityAsset: 90,
+                bondAsset: 0,
+                totalAsset: 90,
+                equityRatio: 1,
+                cumulativeInvestment: 200,
+                profit: -110,
+                profitRate: -0.55,
+                cumulativeInflation: 0,
+                realTotalAsset: 90,
+                realProfit: -110,
+                realProfitRate: -0.55,
+              },
+            ],
+            finalValue: 90,
+            maxDrawdown: 0.1,
+            totalReturn: -0.55,
+          },
+        ]
+
+        const metrics = calculateRiskMetrics(paths, 0)
+        expect(metrics.var95).toBeCloseTo(94, 6)
+        expect(metrics.var95Percent).toBeCloseTo(0.53, 6)
+        expect(metrics.var95Percent).toBeGreaterThanOrEqual(0)
+      })
     })
   })
 })

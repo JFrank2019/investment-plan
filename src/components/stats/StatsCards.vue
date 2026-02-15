@@ -11,6 +11,7 @@ import {
   BarChart3,
   Shield,
   Percent,
+  Coins,
 } from 'lucide-vue-next'
 
 const store = useInvestmentStore()
@@ -22,6 +23,7 @@ const stats = computed(() => {
 
   const det = store.deterministicSummary
   const mc = store.monteCarloSummary
+  const inf = store.inflationSummary
 
   return {
     // 确定性结果
@@ -37,13 +39,23 @@ const stats = computed(() => {
     medianReturn: mc.medianReturn,
     lossProbability: mc.lossProbability,
     avgMaxDrawdown: mc.avgMaxDrawdown,
+
+    // 通胀调整结果
+    realFinalValue: inf?.realFinalValue,
+    realProfit: inf?.realProfit,
+    realProfitRate: inf?.realProfitRate,
+    cumulativeInflation: inf?.cumulativeInflation,
+    realMedian: inf?.realMedian,
+    realP5: inf?.realP5,
+    realP95: inf?.realP95,
+    inflationRate: inf?.inflationRate,
   }
 })
 
 const cards = computed(() => {
   if (!stats.value) return []
 
-  return [
+  const cardsList = [
     {
       // 主要数据 - 蓝色
       title: '预期终值（确定性）',
@@ -129,6 +141,25 @@ const cards = computed(() => {
       iconColor: 'text-zinc-600 dark:text-zinc-400',
     },
   ]
+
+  // 添加通胀调整卡片
+  if (stats.value.realFinalValue !== undefined && stats.value.realFinalValue !== null) {
+    const realProfitRate = stats.value.realProfitRate ?? 0
+    cardsList.push({
+      title: '实际购买力',
+      value: formatMoney(stats.value.realFinalValue),
+      subValue: `实际收益 ${formatPercent(realProfitRate)}`,
+      icon: Coins,
+      bgColor:
+        realProfitRate >= 0
+          ? 'bg-purple-100 dark:bg-purple-500/20'
+          : 'bg-red-100 dark:bg-red-500/20',
+      iconColor:
+        realProfitRate >= 0 ? 'text-purple-600 dark:text-purple-400' : 'text-red-600 dark:text-red-400',
+    })
+  }
+
+  return cardsList
 })
 </script>
 

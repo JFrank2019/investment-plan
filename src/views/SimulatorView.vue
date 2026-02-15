@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { defineAsyncComponent, ref } from 'vue'
 import { useInvestmentStore } from '@/stores/investment'
 import { Play, RefreshCw, AlertTriangle } from 'lucide-vue-next'
-import ConfigPanel from '@/components/config/ConfigPanel.vue'
-import StatsCards from '@/components/stats/StatsCards.vue'
-import AssetGrowthChart from '@/components/charts/AssetGrowthChart.vue'
-import DistributionChart from '@/components/charts/DistributionChart.vue'
-import AllocationChart from '@/components/charts/AllocationChart.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+
+const ConfigPanel = defineAsyncComponent(() => import('@/components/config/ConfigPanel.vue'))
+const StatsCards = defineAsyncComponent(() => import('@/components/stats/StatsCards.vue'))
+const RiskMetricsCard = defineAsyncComponent(() => import('@/components/stats/RiskMetricsCard.vue'))
+const AssetGrowthChart = defineAsyncComponent(() => import('@/components/charts/AssetGrowthChart.vue'))
+const DistributionChart = defineAsyncComponent(() => import('@/components/charts/DistributionChart.vue'))
+const AllocationChart = defineAsyncComponent(() => import('@/components/charts/AllocationChart.vue'))
 
 const store = useInvestmentStore()
 const activeTab = ref<'config' | 'results'>('config')
@@ -72,7 +74,7 @@ function handleResetConfirm() {
       class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/10"
     >
       <div class="flex items-start gap-3">
-        <AlertTriangle class="h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400" />
+        <AlertTriangle class="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
         <div>
           <h3 class="text-sm font-medium text-amber-800 dark:text-amber-200">参数提醒</h3>
           <ul class="mt-1 list-inside list-disc text-sm text-amber-700 dark:text-amber-300">
@@ -88,7 +90,7 @@ function handleResetConfirm() {
       class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-500/20 dark:bg-red-500/10"
     >
       <div class="flex items-start gap-3">
-        <AlertTriangle class="h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400" />
+        <AlertTriangle class="h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
         <div>
           <h3 class="text-sm font-medium text-red-800 dark:text-red-200">参数错误</h3>
           <ul class="mt-1 list-inside list-disc text-sm text-red-700 dark:text-red-300">
@@ -128,20 +130,75 @@ function handleResetConfirm() {
 
     <!-- Content -->
     <div v-if="activeTab === 'config'">
-      <ConfigPanel />
+      <Suspense>
+        <template #default>
+          <ConfigPanel />
+        </template>
+        <template #fallback>
+          <div class="space-y-3 sm:space-y-6">
+            <div class="glass-card h-24 animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
+            <div class="grid gap-3 sm:gap-6 lg:grid-cols-2">
+              <div class="glass-card h-72 animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
+              <div class="glass-card h-72 animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
+              <div class="glass-card h-72 animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
+              <div class="glass-card h-72 animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
+            </div>
+          </div>
+        </template>
+      </Suspense>
     </div>
 
     <div v-else-if="activeTab === 'results' && store.hasCalculated" class="space-y-6">
       <!-- Stats Cards -->
-      <StatsCards />
+      <Suspense>
+        <template #default>
+          <StatsCards />
+        </template>
+        <template #fallback>
+          <div class="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
+            <div
+              v-for="idx in 8"
+              :key="`stats-skeleton-${idx}`"
+              class="glass-card h-28 animate-pulse bg-zinc-100 dark:bg-zinc-800/60"
+            ></div>
+          </div>
+        </template>
+      </Suspense>
+
+      <!-- Risk Metrics Card -->
+      <Suspense>
+        <template #default>
+          <RiskMetricsCard />
+        </template>
+        <template #fallback>
+          <div class="glass-card h-64 animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
+        </template>
+      </Suspense>
 
       <!-- Charts -->
-      <div class="grid gap-6 lg:grid-cols-2">
-        <AssetGrowthChart />
-        <DistributionChart />
-      </div>
+      <Suspense>
+        <template #default>
+          <div class="grid gap-6 lg:grid-cols-2">
+            <AssetGrowthChart />
+            <DistributionChart />
+          </div>
+        </template>
+        <template #fallback>
+          <div class="grid gap-6 lg:grid-cols-2">
+            <div class="glass-card h-[432px] animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
+            <div class="glass-card h-[432px] animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
+          </div>
+        </template>
+      </Suspense>
 
-      <AllocationChart />
+      <Suspense>
+        <template #default>
+          <AllocationChart />
+        </template>
+        <template #fallback>
+          <div class="glass-card h-[432px] animate-pulse bg-zinc-100 dark:bg-zinc-800/60"></div>
+        </template>
+      </Suspense>
     </div>
 
     <!-- 确认对话框 -->

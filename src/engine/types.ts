@@ -23,6 +23,9 @@ export interface SimulationParams {
   // 模拟配置
   simulationMonths: number // 模拟时长（月）
   monteCarloPathCount: number // 蒙特卡洛模拟路径数量
+
+  // 通胀配置
+  inflationRate: number // 年化通胀率（默认 0.025 = 2.5%）
 }
 
 /**
@@ -37,6 +40,11 @@ export interface AssetState {
   cumulativeInvestment: number // 累计投入本金
   profit: number // 收益额
   profitRate: number // 收益率
+  // 通胀调整字段
+  cumulativeInflation: number // 累计通胀率
+  realTotalAsset: number // 实际购买力
+  realProfit: number // 实际收益
+  realProfitRate: number // 实际收益率
 }
 
 /**
@@ -90,6 +98,9 @@ export interface SimulationStatistics {
   maxDrawdownP95: number // 95% 分位最大回撤
   lossProbability: number // 亏损概率（终值 < 本金）
 
+  // 高级风险指标
+  riskMetrics: RiskMetrics
+
   // 置信区间时间序列（用于图表）
   confidenceBands: ConfidenceBand[]
 }
@@ -104,6 +115,32 @@ export interface ConfidenceBand {
   p25: number
   p75: number
   p95: number
+  // 通胀调整后的置信区间
+  realMedian?: number
+  realP5?: number
+  realP95?: number
+}
+
+/**
+ * 风险指标
+ */
+export interface RiskMetrics {
+  // 基础风险指标
+  maxDrawdownMean: number // 平均最大回撤
+  maxDrawdownP95: number // 95%分位最大回撤
+  lossProbability: number // 亏损概率
+
+  // 高级风险指标
+  sharpeRatio: number // 夏普比率
+  sortinoRatio: number // 索提诺比率
+  var95: number // VaR (95%) - 绝对值
+  var95Percent: number // VaR 百分比
+  cvar95: number // 条件 VaR (预期亏损)
+
+  // 回撤持续期
+  maxDrawdownDuration: number // 最大回撤持续期（月）
+  avgDrawdownDuration: number // 平均回撤持续期（月）
+  recoveryProbability: number // 回撤恢复概率（在模拟期内恢复的概率）
 }
 
 /**
@@ -117,21 +154,46 @@ export interface ChartDataPoint {
 }
 
 /**
+ * 风险等级
+ */
+export type RiskLevel = 'conservative' | 'balanced' | 'aggressive'
+
+/**
+ * 投资组合预设模板
+ */
+export interface PortfolioPreset {
+  id: string // 唯一标识
+  name: string // 模板名称
+  description: string // 简短描述
+  riskLevel: RiskLevel // 风险等级
+  // 预设参数
+  initialEquityRatio: number // 初始偏股比例
+  investEquityRatio: number // 定投偏股比例
+  equityReturn: number // 偏股年化收益率
+  bondReturn: number // 偏债年化收益率
+  equityVolatility: number // 偏股波动率
+  bondVolatility: number // 偏债波动率
+  rebalancePeriod: number // 再平衡周期（月）
+  rebalanceTargetEquityRatio: number // 再平衡目标偏股比例
+}
+
+/**
  * 默认参数
  */
 export const DEFAULT_PARAMS: SimulationParams = {
-  initialCapital: 300000,                 // 初始资金（元）
-  initialEquityRatio: 0.3,                // 初始偏股比例（0-1，0.3 即30%）
-  weeklyInvestment: 1000,                 // 每周定投金额（元）
-  investEquityRatio: 0.3,                 // 定投偏股比例（0-1，0.7 即70%）
-  equityReturn: 0.1,                      // 偏股年化收益率（如0.1为10%，现实预期）
-  bondReturn: 0.04,                       // 偏债年化收益率（如0.04为4%）
-  equityVolatility: 0.2,                  // 偏股年化波动率（如0.2为20%）
-  bondVolatility: 0.03,                   // 偏债年化波动率（如0.03为3%）
-  rebalancePeriod: 6,                     // 再平衡周期（月，6即每6个月再平衡一次）
-  rebalanceTargetEquityRatio: 0.3,        // 再平衡目标偏股比例（0-1，0.5即50%）
-  simulationMonths: 12,                   // 模拟时长（月）
-  monteCarloPathCount: 1000,              // 蒙特卡洛模拟路径数
+  initialCapital: 300000, // 初始资金（元）
+  initialEquityRatio: 0.3, // 初始偏股比例（0-1，0.3 即30%）
+  weeklyInvestment: 1000, // 每周定投金额（元）
+  investEquityRatio: 0.3, // 定投偏股比例（0-1，0.7 即70%）
+  equityReturn: 0.1, // 偏股年化收益率（如0.1为10%，现实预期）
+  bondReturn: 0.04, // 偏债年化收益率（如0.04为4%）
+  equityVolatility: 0.2, // 偏股年化波动率（如0.2为20%）
+  bondVolatility: 0.03, // 偏债年化波动率（如0.03为3%）
+  rebalancePeriod: 6, // 再平衡周期（月，6即每6个月再平衡一次）
+  rebalanceTargetEquityRatio: 0.3, // 再平衡目标偏股比例（0-1，0.5即50%）
+  simulationMonths: 12, // 模拟时长（月）
+  monteCarloPathCount: 1000, // 蒙特卡洛模拟路径数
+  inflationRate: 0.025, // 年化通胀率（默认2.5%）
 }
 
 /**

@@ -1,6 +1,15 @@
 // 类型导出
 export * from './types'
 
+// 风险指标计算函数
+export {
+  sharpeRatio,
+  sortinoRatio,
+  valueAtRisk,
+  conditionalVaR,
+  calculateRiskMetrics,
+} from './statistics'
+
 // 确定性计算
 export {
   runDeterministicSimulation,
@@ -25,4 +34,17 @@ export {
   formatMoney,
   formatPercent,
   formatMoneyFull,
+  annualToMonthlyInflation,
+  calculateCumulativeInflation,
+  calculateRealValue,
+  calculateRealReturn,
 } from './statistics'
+
+// 预设模板
+export {
+  PORTFOLIO_PRESETS,
+  getPresetById,
+  getPresetsByRiskLevel,
+  getRiskLevelLabel,
+  getRiskLevelColor,
+} from './presets'

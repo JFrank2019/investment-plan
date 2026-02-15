@@ -5,6 +5,7 @@ import {
   type SimulationParams,
   type DeterministicResult,
   type MonteCarloResult,
+  type PortfolioPreset,
   DEFAULT_PARAMS,
   validateParams,
   runDeterministicSimulation,
@@ -52,6 +53,22 @@ export const useInvestmentStore = defineStore('investment', () => {
     monteCarloResult.value = null
     hasCalculated.value = false
     errors.value = []
+  }
+
+  // 应用预设模板
+  function applyPreset(preset: PortfolioPreset) {
+    params.value = {
+      ...params.value,
+      initialEquityRatio: preset.initialEquityRatio,
+      investEquityRatio: preset.investEquityRatio,
+      equityReturn: preset.equityReturn,
+      bondReturn: preset.bondReturn,
+      equityVolatility: preset.equityVolatility,
+      bondVolatility: preset.bondVolatility,
+      rebalancePeriod: preset.rebalancePeriod,
+      rebalanceTargetEquityRatio: preset.rebalanceTargetEquityRatio,
+    }
+    hasCalculated.value = false
   }
 
   // 执行计算
@@ -132,6 +149,31 @@ export const useInvestmentStore = defineStore('investment', () => {
     }
   })
 
+  // 通胀调整结果摘要
+  const inflationSummary = computed(() => {
+    if (!deterministicResult.value || !monteCarloResult.value) return null
+
+    const finalState = deterministicResult.value.path.states.slice(-1)[0]
+    if (!finalState) return null
+
+    const bands = monteCarloResult.value.statistics.confidenceBands
+    const finalBand = bands[bands.length - 1]
+
+    return {
+      // 确定性结果的通胀数据
+      realFinalValue: finalState.realTotalAsset,
+      realProfit: finalState.realProfit,
+      realProfitRate: finalState.realProfitRate,
+      cumulativeInflation: finalState.cumulativeInflation,
+      // 蒙特卡洛的实际购买力置信区间
+      realMedian: finalBand?.realMedian,
+      realP5: finalBand?.realP5,
+      realP95: finalBand?.realP95,
+      // 通胀率
+      inflationRate: params.value.inflationRate,
+    }
+  })
+
   return {
     // 状态
     params,
@@ -146,10 +188,12 @@ export const useInvestmentStore = defineStore('investment', () => {
     totalInvestment,
     deterministicSummary,
     monteCarloSummary,
+    inflationSummary,
 
     // 方法
     updateParams,
     resetParams,
+    applyPreset,
     runSimulation,
     runDeterministicOnly,
   }

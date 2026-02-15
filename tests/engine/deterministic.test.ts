@@ -152,4 +152,85 @@ describe('确定性计算引擎', () => {
       expect(month12State.equityRatio).toBeCloseTo(0.5, 4)
     })
   })
+
+  describe('通胀调整', () => {
+    it('应该正确计算实际购买力', () => {
+      const params = {
+        ...DEFAULT_PARAMS,
+        simulationMonths: 12,
+        inflationRate: 0.025,
+      }
+      const result = runDeterministicSimulation(params)
+      const finalState = result.path.states[result.path.states.length - 1]
+
+      // 实际购买力应该小于名义值
+      expect(finalState.realTotalAsset).toBeLessThan(finalState.totalAsset)
+      // 累计通胀应该为正
+      expect(finalState.cumulativeInflation).toBeGreaterThan(0)
+    })
+
+    it('零通胀时实际值等于名义值', () => {
+      const params = {
+        ...DEFAULT_PARAMS,
+        simulationMonths: 12,
+        inflationRate: 0,
+      }
+      const result = runDeterministicSimulation(params)
+      const finalState = result.path.states[result.path.states.length - 1]
+
+      expect(finalState.realTotalAsset).toBe(finalState.totalAsset)
+      expect(finalState.cumulativeInflation).toBe(0)
+    })
+
+    it('初始月份的累计通胀应为0', () => {
+      const params = {
+        ...DEFAULT_PARAMS,
+        inflationRate: 0.03,
+      }
+      const result = runDeterministicSimulation(params)
+      const initialState = result.path.states[0]
+
+      expect(initialState.cumulativeInflation).toBe(0)
+      expect(initialState.realTotalAsset).toBe(initialState.totalAsset)
+    })
+
+    it('累计通胀应随时间增加', () => {
+      const params = {
+        ...DEFAULT_PARAMS,
+        simulationMonths: 24,
+        inflationRate: 0.03,
+      }
+      const result = runDeterministicSimulation(params)
+
+      const month12 = result.path.states[12]
+      const month24 = result.path.states[24]
+
+      expect(month24.cumulativeInflation).toBeGreaterThan(month12.cumulativeInflation)
+    })
+
+    it('高通胀率应该更显著地降低实际购买力', () => {
+      const lowInflationParams = {
+        ...DEFAULT_PARAMS,
+        simulationMonths: 24,
+        inflationRate: 0.01,
+      }
+      const highInflationParams = {
+        ...DEFAULT_PARAMS,
+        simulationMonths: 24,
+        inflationRate: 0.05,
+      }
+
+      const lowResult = runDeterministicSimulation(lowInflationParams)
+      const highResult = runDeterministicSimulation(highInflationParams)
+
+      const lowFinal = lowResult.path.states[24]
+      const highFinal = highResult.path.states[24]
+
+      // 高通胀时实际购买力占名义值的比例应该更低
+      const lowRatio = lowFinal.realTotalAsset / lowFinal.totalAsset
+      const highRatio = highFinal.realTotalAsset / highFinal.totalAsset
+
+      expect(highRatio).toBeLessThan(lowRatio)
+    })
+  })
 })

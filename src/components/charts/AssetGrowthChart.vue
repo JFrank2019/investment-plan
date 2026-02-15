@@ -35,6 +35,12 @@ const chartOption = computed(() => {
   const p95Values = confidenceBands.map((b) => b.p95)
   const investmentValues = deterministicData.map((s) => s.cumulativeInvestment)
 
+  // 实际购买力数据
+  const realDeterministicValues = deterministicData.map((s) => s.realTotalAsset)
+  const realMedianValues = confidenceBands.map((b) => b.realMedian ?? b.median)
+  const realP5Values = confidenceBands.map((b) => b.realP5 ?? b.p5)
+  const realP95Values = confidenceBands.map((b) => b.realP95 ?? b.p95)
+
   const textColor = isDark.value ? '#a1a1aa' : '#71717a'
   const lineColor = isDark.value ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
 
@@ -71,7 +77,15 @@ const chartOption = computed(() => {
     legend: {
       bottom: 0,
       textStyle: { color: textColor },
-      data: ['确定性预测', '蒙特卡洛中位数', '95%置信区间', '累计投入'],
+      data: [
+        '确定性预测',
+        '蒙特卡洛中位数',
+        '95%置信区间',
+        '实际95%置信区间',
+        '累计投入',
+        '实际购买力',
+        '实际中位数',
+      ],
     },
     grid: {
       left: '3%',
@@ -121,6 +135,29 @@ const chartOption = computed(() => {
         tooltip: { show: false },
       },
       {
+        name: '实际95%置信区间',
+        type: 'line',
+        data: realP95Values,
+        lineStyle: { opacity: 0 },
+        areaStyle: {
+          color: 'rgba(168, 85, 247, 0.12)',
+        },
+        stack: 'real-confidence',
+        symbol: 'none',
+      },
+      {
+        name: '实际95%置信区间下界',
+        type: 'line',
+        data: realP5Values.map((v, i) => (realP95Values[i] ?? 0) - v),
+        lineStyle: { opacity: 0 },
+        areaStyle: {
+          color: isDark.value ? '#18122b' : '#faf5ff',
+        },
+        stack: 'real-confidence',
+        symbol: 'none',
+        tooltip: { show: false },
+      },
+      {
         name: '确定性预测',
         type: 'line',
         data: deterministicValues,
@@ -143,6 +180,23 @@ const chartOption = computed(() => {
         data: investmentValues,
         lineStyle: { width: 2, color: '#71717a', type: 'dotted' },
         itemStyle: { color: '#71717a' },
+        symbol: 'none',
+      },
+      {
+        name: '实际购买力',
+        type: 'line',
+        data: realDeterministicValues,
+        lineStyle: { width: 2, color: '#a855f7', type: 'solid' },
+        itemStyle: { color: '#a855f7' },
+        symbol: 'diamond',
+        symbolSize: 4,
+      },
+      {
+        name: '实际中位数',
+        type: 'line',
+        data: realMedianValues,
+        lineStyle: { width: 1.5, color: '#c084fc', type: 'dashed' },
+        itemStyle: { color: '#c084fc' },
         symbol: 'none',
       },
     ],

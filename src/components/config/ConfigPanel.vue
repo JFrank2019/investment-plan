@@ -4,6 +4,7 @@ import { useInvestmentStore } from '@/stores/investment'
 import { formatMoney } from '@/engine'
 import { Wallet, PiggyBank, TrendingUp, RefreshCw, Clock } from 'lucide-vue-next'
 import RangeSlider from './RangeSlider.vue'
+import PresetSelector from './PresetSelector.vue'
 
 const store = useInvestmentStore()
 
@@ -28,8 +29,12 @@ function updateRebalanceRatio(value: number) {
 </script>
 
 <template>
-  <div class="grid gap-3 sm:gap-6 lg:grid-cols-2">
-    <!-- 初始资金配置 -->
+  <div class="space-y-3 sm:space-y-6">
+    <!-- 预设模板选择器 -->
+    <PresetSelector />
+
+    <div class="grid gap-3 sm:gap-6 lg:grid-cols-2">
+      <!-- 初始资金配置 -->
     <div class="glass-card p-4 sm:p-6">
       <div class="mb-3 flex items-center gap-2 sm:mb-4 sm:gap-3">
         <div
@@ -323,6 +328,31 @@ function updateRebalanceRatio(value: number) {
             </select>
           </div>
         </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-medium text-zinc-700 sm:mb-1.5 sm:text-sm dark:text-zinc-300">
+            年化通胀率
+          </label>
+          <div class="relative">
+            <input
+              type="number"
+              :value="(store.params.inflationRate * 100).toFixed(1)"
+              @change="store.updateParams({ inflationRate: (Number(($event.target as HTMLInputElement).value) || 0) / 100 })"
+              class="input-field pr-6 text-sm sm:pr-8"
+              step="0.1"
+              min="0"
+              max="20"
+            />
+            <span
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-500 sm:right-3 sm:text-sm dark:text-zinc-400"
+            >
+              %
+            </span>
+          </div>
+          <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+            用于计算实际购买力，默认 2.5%
+          </p>
+        </div>
       </div>
     </div>
 
@@ -363,6 +393,7 @@ function updateRebalanceRatio(value: number) {
           </p>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </template>

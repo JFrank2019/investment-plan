@@ -83,4 +83,109 @@ describe('蒙特卡洛模拟引擎', () => {
       expect(variance).toBeLessThan(1) // 几乎为0
     })
   })
+
+  describe('风险指标计算', () => {
+    it('应该计算完整的风险指标', () => {
+      const params = {
+        ...DEFAULT_PARAMS,
+        monteCarloPathCount: 100,
+        simulationMonths: 12,
+      }
+      const result = runMonteCarloSimulation(params)
+      const rm = result.statistics.riskMetrics
+
+      expect(rm).toBeDefined()
+      expect(rm.sharpeRatio).toBeDefined()
+      expect(rm.sortinoRatio).toBeDefined()
+      expect(rm.var95).toBeDefined()
+      expect(rm.var95Percent).toBeDefined()
+      expect(rm.maxDrawdownDuration).toBeGreaterThanOrEqual(0)
+      expect(rm.recoveryProbability).toBeGreaterThanOrEqual(0)
+      expect(rm.recoveryProbability).toBeLessThanOrEqual(1)
+    })
+
+    it('亏损概率应该在0到1之间', () => {
+      const params = { ...DEFAULT_PARAMS, monteCarloPathCount: 100 }
+      const result = runMonteCarloSimulation(params)
+
+      expect(result.statistics.riskMetrics.lossProbability).toBeGreaterThanOrEqual(0)
+      expect(result.statistics.riskMetrics.lossProbability).toBeLessThanOrEqual(1)
+    })
+
+    it('最大回撤平均值应该在0到1之间', () => {
+      const params = { ...DEFAULT_PARAMS, monteCarloPathCount: 100 }
+      const result = runMonteCarloSimulation(params)
+
+      expect(result.statistics.riskMetrics.maxDrawdownMean).toBeGreaterThanOrEqual(0)
+      expect(result.statistics.riskMetrics.maxDrawdownMean).toBeLessThanOrEqual(1)
+    })
+
+    it('高波动率应该导致更低的夏普比率', () => {
+      const lowVolParams = {
+        ...DEFAULT_PARAMS,
+        equityVolatility: 0.1,
+        monteCarloPathCount: 200,
+      }
+      const highVolParams = {
+        ...DEFAULT_PARAMS,
+        equityVolatility: 0.3,
+        monteCarloPathCount: 200,
+      }
+
+      const lowVolResult = runMonteCarloSimulation(lowVolParams)
+      const highVolResult = runMonteCarloSimulation(highVolParams)
+
+      expect(lowVolResult.statistics.riskMetrics.sharpeRatio).toBeGreaterThan(
+        highVolResult.statistics.riskMetrics.sharpeRatio,
+      )
+    })
+  })
+
+  describe('通胀调整', () => {
+    it('应该计算实际购买力的置信区间', () => {
+      const params = {
+        ...DEFAULT_PARAMS,
+        monteCarloPathCount: 100,
+        simulationMonths: 12,
+        inflationRate: 0.025,
+      }
+      const result = runMonteCarloSimulation(params)
+
+      // 检查置信区间包含实际购买力数据
+      const finalBand = result.statistics.confidenceBands[params.simulationMonths]
+      expect(finalBand.realMedian).toBeDefined()
+      expect(finalBand.realP5).toBeDefined()
+      expect(finalBand.realP95).toBeDefined()
+
+      // 实际中位数应该在P5和P95之间
+      expect(finalBand.realMedian).toBeGreaterThanOrEqual(finalBand.realP5!)
+      expect(finalBand.realMedian).toBeLessThanOrEqual(finalBand.realP95!)
+    })
+
+    it('实际购买力应该小于名义值', () => {
+      const params = {
+        ...DEFAULT_PARAMS,
+        monteCarloPathCount: 100,
+        simulationMonths: 24,
+        inflationRate: 0.03,
+      }
+      const result = runMonteCarloSimulation(params)
+
+      const finalBand = result.statistics.confidenceBands[params.simulationMonths]
+      expect(finalBand.realMedian).toBeLessThan(finalBand.median)
+    })
+
+    it('零通胀时实际值等于名义值', () => {
+      const params = {
+        ...DEFAULT_PARAMS,
+        monteCarloPathCount: 100,
+        simulationMonths: 12,
+        inflationRate: 0,
+      }
+      const result = runMonteCarloSimulation(params)
+
+      const finalBand = result.statistics.confidenceBands[params.simulationMonths]
+      expect(finalBand.realMedian).toBeCloseTo(finalBand.median, 0)
+    })
+  })
 })
