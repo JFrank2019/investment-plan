@@ -44,8 +44,8 @@ function handleApplyPreset(preset: PortfolioPreset) {
 </script>
 
 <template>
-  <div class="data-panel p-6">
-    <div class="mb-4 flex items-center gap-2">
+  <div class="data-panel p-4 sm:p-6">
+    <div class="mb-3 flex items-center gap-2 sm:mb-4">
       <LayoutGrid class="h-4 w-4 icon-base" />
       <h3 class="text-sm font-semibold text-zinc-900 dark:text-white">预设模板</h3>
     </div>

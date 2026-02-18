@@ -50,14 +50,14 @@ function handleCancelSimulation() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
     <!-- Header -->
-    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div class="mb-4 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
           投资收益模拟器
         </h1>
-        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <p class="mt-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
           基于蒙特卡洛模拟的长期资产配置预测工具
         </p>
       </div>
@@ -127,15 +127,15 @@ function handleCancelSimulation() {
     </div>
 
     <!-- Tabs -->
-    <div class="mb-6 border-b border-zinc-200 dark:border-zinc-800">
-      <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+    <div class="mb-4 border-b border-zinc-200 sm:mb-6 dark:border-zinc-800">
+      <nav class="-mb-px flex space-x-6 sm:space-x-8" aria-label="Tabs">
         <button
           @click="activeTab = 'config'"
           :class="[
             activeTab === 'config'
               ? 'border-zinc-900 text-zinc-900 dark:border-white dark:text-white'
               : 'border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:text-zinc-300',
-            'group flex items-center border-b-2 py-4 px-1 text-sm font-medium transition-colors',
+            'group flex items-center border-b-2 py-3 px-1 text-sm font-medium transition-colors sm:py-4',
           ]"
         >
           <Settings2 class="mr-2 h-4 w-4" />
@@ -149,7 +149,7 @@ function handleCancelSimulation() {
               ? 'border-zinc-900 text-zinc-900 dark:border-white dark:text-white'
               : 'border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:text-zinc-300',
             !store.hasCalculated && !store.isCalculating ? 'cursor-not-allowed opacity-50' : '',
-            'group flex items-center border-b-2 py-4 px-1 text-sm font-medium transition-colors',
+            'group flex items-center border-b-2 py-3 px-1 text-sm font-medium transition-colors sm:py-4',
           ]"
         >
           <BarChart2 class="mr-2 h-4 w-4" />

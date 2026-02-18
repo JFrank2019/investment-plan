@@ -85,19 +85,19 @@ const getValueColor = (val: number, isGoodHigh = true) => {
       class="grid grid-cols-1 divide-y divide-zinc-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:divide-zinc-800"
     >
       <!-- Column 1: Core Value (核心资产) -->
-      <div class="p-6">
+      <div class="p-4 sm:p-6">
         <h4
-          class="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
+          class="mb-3 sm:mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
         >
           <DollarSign class="h-3.5 w-3.5" />
           资产终值
         </h4>
-        <div class="space-y-6">
+        <div class="space-y-4 sm:space-y-6">
           <!-- Deterministic Final -->
           <div>
             <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">预期终值 (确定性)</p>
             <p
-              class="money-text mt-1 text-2xl font-bold tracking-tight text-zinc-900 dark:text-white"
+              class="money-text mt-1 text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white"
             >
               {{ formatMoney(stats.deterministicFinal) }}
             </p>
@@ -135,14 +135,14 @@ const getValueColor = (val: number, isGoodHigh = true) => {
       </div>
 
       <!-- Column 2: Returns (收益率) -->
-      <div class="p-6">
+      <div class="p-4 sm:p-6">
         <h4
-          class="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
+          class="mb-3 sm:mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
         >
           <TrendingUp class="h-3.5 w-3.5" />
           收益表现
         </h4>
-        <div class="space-y-5">
+        <div class="space-y-4 sm:space-y-5">
           <!-- CAGR -->
           <div class="flex items-center justify-between">
             <div class="flex flex-col gap-0.5">
@@ -188,14 +188,14 @@ const getValueColor = (val: number, isGoodHigh = true) => {
       </div>
 
       <!-- Column 3: Range & Allocation (区间与配置) -->
-      <div class="p-6 bg-zinc-50/50 dark:bg-zinc-900/20">
+      <div class="p-4 sm:p-6 bg-zinc-50/50 dark:bg-zinc-900/20">
         <h4
-          class="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
+          class="mb-3 sm:mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
         >
           <BarChart3 class="h-3.5 w-3.5" />
           分布与配置
         </h4>
-        <div class="space-y-6">
+        <div class="space-y-4 sm:space-y-6">
           <!-- Confidence Interval -->
           <div>
             <p class="mb-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">

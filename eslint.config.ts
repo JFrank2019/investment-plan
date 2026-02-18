@@ -25,6 +25,25 @@ export default defineConfigWithVueTs(
     ...pluginVitest.configs.recommended,
     files: ['src/**/__tests__/*'],
   },
+  {
+    name: 'app/no-direct-use-dark',
+    files: ['src/**/*.{ts,vue}'],
+    ignores: ['src/composables/useThemeMode.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@vueuse/core',
+              importNames: ['useDark'],
+              message: '请改用 @/composables/useThemeMode，避免主题状态分叉',
+            },
+          ],
+        },
+      ],
+    },
+  },
 
   skipFormatting,
 

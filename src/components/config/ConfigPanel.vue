@@ -23,12 +23,17 @@ function updateInvestEquityRatio(value: number) {
   store.updateParams({ investEquityRatio: value / 100 })
 }
 
-function getNumericValue(event: Event): number {
+function getNumericValue(event: Event): number | null {
   const target = event.target
   if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) {
-    return 0
+    return null
   }
-  return Number(target.value) || 0
+  const rawValue = target.value.trim()
+  if (rawValue === '') {
+    return null
+  }
+  const parsed = Number(rawValue)
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 function updateNumberParam<K extends keyof SimulationParams>(key: K, value: number) {
@@ -36,11 +41,15 @@ function updateNumberParam<K extends keyof SimulationParams>(key: K, value: numb
 }
 
 function updateCurrencyParam<K extends keyof SimulationParams>(key: K, event: Event) {
-  updateNumberParam(key, getNumericValue(event))
+  const value = getNumericValue(event)
+  if (value === null) return
+  updateNumberParam(key, value)
 }
 
 function updatePercentParam<K extends keyof SimulationParams>(key: K, event: Event) {
-  updateNumberParam(key, getNumericValue(event) / 100)
+  const value = getNumericValue(event)
+  if (value === null) return
+  updateNumberParam(key, value / 100)
 }
 
 function handleInitialCapitalChange(event: Event) {
@@ -68,15 +77,21 @@ function handleBondVolatilityChange(event: Event) {
 }
 
 function handleRebalancePeriodChange(event: Event) {
-  updateNumberParam('rebalancePeriod', getNumericValue(event))
+  const value = getNumericValue(event)
+  if (value === null) return
+  updateNumberParam('rebalancePeriod', value)
 }
 
 function handleSimulationMonthsChange(event: Event) {
-  updateNumberParam('simulationMonths', getNumericValue(event))
+  const value = getNumericValue(event)
+  if (value === null) return
+  updateNumberParam('simulationMonths', value)
 }
 
 function handleMonteCarloPathCountChange(event: Event) {
-  updateNumberParam('monteCarloPathCount', getNumericValue(event))
+  const value = getNumericValue(event)
+  if (value === null) return
+  updateNumberParam('monteCarloPathCount', value)
 }
 
 function handleInflationRateChange(event: Event) {
@@ -90,16 +105,16 @@ function handleInflationRateChange(event: Event) {
     <PresetSelector />
 
     <!-- 配置面板 -->
-    <div class="data-panel p-6">
+    <div class="data-panel p-4 sm:p-6">
       <!-- 1. 初始资金 -->
-      <div class="mb-8">
+      <div class="mb-5 sm:mb-8">
         <h3
           class="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white"
         >
           <Wallet class="h-4 w-4 icon-base" />
           初始资金
         </h3>
-        <div class="grid gap-6 sm:grid-cols-2">
+        <div class="grid gap-4 sm:grid-cols-2 sm:gap-6">
           <div>
             <label class="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
               资金总额
@@ -108,7 +123,7 @@ function handleInflationRateChange(event: Event) {
               <input
                 type="number"
                 :value="store.params.initialCapital"
-                @input="handleInitialCapitalChange"
+                @change="handleInitialCapitalChange"
                 class="input-field pr-10"
                 min="0"
                 step="10000"
@@ -145,14 +160,14 @@ function handleInflationRateChange(event: Event) {
       <div class="section-divider"></div>
 
       <!-- 2. 定投计划 -->
-      <div class="mb-8">
+      <div class="mb-5 sm:mb-8">
         <h3
           class="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white"
         >
           <PiggyBank class="h-4 w-4 icon-base" />
           定投计划
         </h3>
-        <div class="grid gap-6 sm:grid-cols-2">
+        <div class="grid gap-4 sm:grid-cols-2 sm:gap-6">
           <div>
             <label class="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
               每周定投
@@ -161,7 +176,7 @@ function handleInflationRateChange(event: Event) {
               <input
                 type="number"
                 :value="store.params.weeklyInvestment"
-                @input="handleWeeklyInvestmentChange"
+                @change="handleWeeklyInvestmentChange"
                 class="input-field pr-12"
                 min="0"
                 step="100"
@@ -198,14 +213,14 @@ function handleInflationRateChange(event: Event) {
       <div class="section-divider"></div>
 
       <!-- 3. 市场预期 -->
-      <div class="mb-8">
+      <div class="mb-5 sm:mb-8">
         <h3
           class="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-white"
         >
           <TrendingUp class="h-4 w-4 icon-base" />
           市场预期 (年化)
         </h3>
-        <div class="grid gap-6 sm:grid-cols-2">
+        <div class="grid gap-4 sm:grid-cols-2 sm:gap-6">
           <!-- 权益类 -->
           <div class="space-y-4">
             <h4 class="text-xs font-medium text-zinc-900 dark:text-zinc-100">
@@ -218,7 +233,7 @@ function handleInflationRateChange(event: Event) {
                   <input
                     type="number"
                     :value="(store.params.equityReturn * 100).toFixed(1)"
-                    @input="handleEquityReturnChange"
+                    @change="handleEquityReturnChange"
                     class="input-field pr-6"
                     step="0.5"
                   />
@@ -233,7 +248,7 @@ function handleInflationRateChange(event: Event) {
                   <input
                     type="number"
                     :value="(store.params.equityVolatility * 100).toFixed(1)"
-                    @input="handleEquityVolatilityChange"
+                    @change="handleEquityVolatilityChange"
                     class="input-field pr-6"
                     step="1"
                   />
@@ -255,7 +270,7 @@ function handleInflationRateChange(event: Event) {
                   <input
                     type="number"
                     :value="(store.params.bondReturn * 100).toFixed(1)"
-                    @input="handleBondReturnChange"
+                    @change="handleBondReturnChange"
                     class="input-field pr-6"
                     step="0.5"
                   />
@@ -270,7 +285,7 @@ function handleInflationRateChange(event: Event) {
                   <input
                     type="number"
                     :value="(store.params.bondVolatility * 100).toFixed(1)"
-                    @input="handleBondVolatilityChange"
+                    @change="handleBondVolatilityChange"
                     class="input-field pr-6"
                     step="0.5"
                   />
@@ -294,7 +309,7 @@ function handleInflationRateChange(event: Event) {
           <RefreshCw class="h-4 w-4 icon-base" />
           模拟参数
         </h3>
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
           <div>
             <label class="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
               模拟时长
@@ -353,7 +368,7 @@ function handleInflationRateChange(event: Event) {
               <input
                 type="number"
                 :value="(store.params.inflationRate * 100).toFixed(1)"
-                @input="handleInflationRateChange"
+                @change="handleInflationRateChange"
                 class="input-field pr-6"
                 step="0.1"
               />

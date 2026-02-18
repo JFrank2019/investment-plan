@@ -12,13 +12,15 @@ import {
 import VChart from 'vue-echarts'
 import { useInvestmentStore } from '@/stores/investment'
 import { formatMoney, formatMonthLabel } from '@/engine'
-import { useDark } from '@vueuse/core'
+import { useThemeMode } from '@/composables/useThemeMode'
+import { useChartResponsive } from '@/composables/useChartResponsive'
 import { getMoneyTextStyle, getMoneyAxisLabel } from '@/utils/chartConfig'
 
 use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent])
 
 const store = useInvestmentStore()
-const isDark = useDark()
+const isDark = useThemeMode()
+const { isMobile } = useChartResponsive()
 
 const chartOption = computed(() => {
   if (!store.deterministicResult || !store.monteCarloResult) {
@@ -37,6 +39,23 @@ const chartOption = computed(() => {
 
   // 实际购买力数据
   const realDeterministicValues = deterministicData.map((s) => s.realTotalAsset)
+  const seriesLabels = isMobile.value
+    ? {
+        confidence: '95%区间',
+        confidenceLower: '95%区间下界',
+        deterministic: '确定性',
+        median: '中位数',
+        investment: '投入',
+        purchasingPower: '购买力',
+      }
+    : {
+        confidence: '95%置信区间',
+        confidenceLower: '95%置信区间下界',
+        deterministic: '确定性预测',
+        median: '蒙特卡洛中位数',
+        investment: '累计投入',
+        purchasingPower: '实际购买力',
+      }
 
   // Theme Colors (Slate / Financial Navy)
   const textColor = isDark.value ? '#94a3b8' : '#64748b' // Slate 400 / 500
@@ -58,10 +77,12 @@ const chartOption = computed(() => {
     },
     tooltip: {
       trigger: 'axis',
+      confine: true,
       backgroundColor: tooltipBg,
       borderColor: tooltipBorder,
       textStyle: {
         color: isDark.value ? '#f8fafc' : '#0f172a',
+        fontSize: isMobile.value ? 11 : 12,
         ...getMoneyTextStyle(),
       },
       formatter: (
@@ -72,7 +93,7 @@ const chartOption = computed(() => {
         params.forEach((p) => {
           if (p.value !== undefined) {
             // 只显示关键指标，避免太多
-            if (p.seriesName?.includes('下界')) return
+            if (p.seriesName === seriesLabels.confidenceLower) return
             html += `
               <div class="flex justify-between gap-4 text-xs mb-1">
                 <span style="color: ${p.color}">${p.seriesName}</span>
@@ -84,17 +105,27 @@ const chartOption = computed(() => {
       },
     },
     legend: {
+      type: isMobile.value ? 'scroll' : 'plain',
       bottom: 0,
+      left: 0,
+      right: 0,
       icon: 'circle',
-      itemWidth: 8,
-      itemHeight: 8,
-      textStyle: { color: textColor, fontSize: 12 },
-      data: ['确定性预测', '蒙特卡洛中位数', '95%置信区间', '累计投入', '实际购买力'],
+      itemWidth: isMobile.value ? 6 : 8,
+      itemHeight: isMobile.value ? 6 : 8,
+      itemGap: isMobile.value ? 10 : 14,
+      textStyle: { color: textColor, fontSize: isMobile.value ? 10 : 12 },
+      data: [
+        seriesLabels.deterministic,
+        seriesLabels.median,
+        seriesLabels.confidence,
+        seriesLabels.investment,
+        seriesLabels.purchasingPower,
+      ],
     },
     grid: {
-      left: '0%',
+      left: isMobile.value ? '3%' : '0%',
       right: '2%',
-      bottom: '10%',
+      bottom: isMobile.value ? '20%' : '10%',
       top: '15%',
       containLabel: true,
     },
@@ -102,7 +133,12 @@ const chartOption = computed(() => {
       type: 'category',
       data: months,
       axisLine: { lineStyle: { color: axisLineColor } },
-      axisLabel: { color: textColor, fontSize: 11 },
+      axisLabel: {
+        color: textColor,
+        fontSize: isMobile.value ? 10 : 11,
+        interval: isMobile.value ? 'auto' : 0,
+        hideOverlap: true,
+      },
       axisTick: { show: false },
     },
     yAxis: {
@@ -111,7 +147,7 @@ const chartOption = computed(() => {
       splitLine: { lineStyle: { color: splitLineColor } },
       axisLabel: {
         color: textColor,
-        fontSize: 11,
+        fontSize: isMobile.value ? 10 : 11,
         ...getMoneyAxisLabel(),
         formatter: (value: number) => formatMoney(value),
       },
@@ -119,7 +155,7 @@ const chartOption = computed(() => {
     series: [
       // 蒙特卡洛置信区间 (背景带)
       {
-        name: '95%置信区间',
+        name: seriesLabels.confidence,
         type: 'line',
         data: p95Values,
         lineStyle: { opacity: 0 },
@@ -130,7 +166,7 @@ const chartOption = computed(() => {
         symbol: 'none',
       },
       {
-        name: '95%置信区间下界',
+        name: seriesLabels.confidenceLower,
         type: 'line',
         data: p5Values,
         lineStyle: { opacity: 0 },
@@ -144,7 +180,7 @@ const chartOption = computed(() => {
 
       // 核心曲线
       {
-        name: '确定性预测',
+        name: seriesLabels.deterministic,
         type: 'line',
         data: deterministicValues,
         lineStyle: { width: 2, color: '#3b82f6' }, // Blue 500
@@ -153,7 +189,7 @@ const chartOption = computed(() => {
         showSymbol: false,
       },
       {
-        name: '蒙特卡洛中位数',
+        name: seriesLabels.median,
         type: 'line',
         data: medianValues,
         lineStyle: { width: 2, color: '#10b981', type: 'dashed' }, // Emerald 500
@@ -162,7 +198,7 @@ const chartOption = computed(() => {
         showSymbol: false,
       },
       {
-        name: '累计投入',
+        name: seriesLabels.investment,
         type: 'line',
         data: investmentValues,
         lineStyle: { width: 1.5, color: textColor, type: 'dotted' },
@@ -171,7 +207,7 @@ const chartOption = computed(() => {
         showSymbol: false,
       },
       {
-        name: '实际购买力',
+        name: seriesLabels.purchasingPower,
         type: 'line',
         data: realDeterministicValues,
         lineStyle: { width: 2, color: '#a855f7' }, // Purple 500
@@ -186,5 +222,5 @@ const chartOption = computed(() => {
 
 <template>
   <!-- Removed wrapper div, chart takes full height of parent -->
-  <VChart :option="chartOption" autoresize style="height: 100%; min-height: 350px" />
+  <VChart :option="chartOption" autoresize :style="{ height: '100%', minHeight: isMobile ? '300px' : '350px' }" />
 </template>

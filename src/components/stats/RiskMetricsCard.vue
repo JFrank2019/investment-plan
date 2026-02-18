@@ -56,14 +56,14 @@ const getProbColor = (val: number, isGoodHigh = true) => {
       class="grid grid-cols-1 divide-y divide-zinc-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:divide-zinc-800"
     >
       <!-- Column 1: Efficiency (回报效率) -->
-      <div class="p-6">
+      <div class="p-4 sm:p-6">
         <h4
-          class="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
+          class="mb-3 sm:mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
         >
           <Gauge class="h-3.5 w-3.5" />
           回报效率
         </h4>
-        <div class="space-y-6">
+        <div class="space-y-4 sm:space-y-6">
           <!-- Sharpe -->
           <div class="group">
             <div class="flex items-baseline justify-between">
@@ -126,14 +126,14 @@ const getProbColor = (val: number, isGoodHigh = true) => {
       </div>
 
       <!-- Column 2: Downside (下行风险) -->
-      <div class="p-6">
+      <div class="p-4 sm:p-6">
         <h4
-          class="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
+          class="mb-3 sm:mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
         >
           <ShieldAlert class="h-3.5 w-3.5" />
           下行风险
         </h4>
-        <div class="space-y-5">
+        <div class="space-y-4 sm:space-y-5">
           <!-- Max Drawdown -->
           <div class="flex items-center justify-between">
             <div class="flex flex-col gap-0.5">
@@ -174,14 +174,14 @@ const getProbColor = (val: number, isGoodHigh = true) => {
       </div>
 
       <!-- Column 3: Probability (概率分布) -->
-      <div class="p-6 bg-zinc-50/50 dark:bg-zinc-900/20">
+      <div class="p-4 sm:p-6 bg-zinc-50/50 dark:bg-zinc-900/20">
         <h4
-          class="mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
+          class="mb-3 sm:mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
         >
           <RotateCcw class="h-3.5 w-3.5" />
           概率预测
         </h4>
-        <div class="space-y-6">
+        <div class="space-y-4 sm:space-y-6">
           <!-- Recovery Prob -->
           <div>
             <div class="mb-2 flex justify-between text-xs">
@@ -229,7 +229,7 @@ const getProbColor = (val: number, isGoodHigh = true) => {
           </div>
 
           <div
-            class="mt-6 flex items-start gap-2 rounded bg-zinc-100 p-3 text-[10px] leading-relaxed text-zinc-500 dark:bg-zinc-800/50 dark:text-zinc-400"
+            class="mt-4 sm:mt-6 flex items-start gap-2 rounded bg-zinc-100 p-3 text-[10px] leading-relaxed text-zinc-500 dark:bg-zinc-800/50 dark:text-zinc-400"
           >
             <Info class="mt-0.5 h-3 w-3 shrink-0" />
             <p>基于 {{ store.params.monteCarloPathCount }} 次蒙特卡洛模拟结果统计。</p>

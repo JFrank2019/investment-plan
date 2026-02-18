@@ -12,13 +12,26 @@ import {
 import VChart from 'vue-echarts'
 import { useInvestmentStore } from '@/stores/investment'
 import { formatMonthLabel } from '@/engine'
-import { useDark } from '@vueuse/core'
+import { useThemeMode } from '@/composables/useThemeMode'
+import { useChartResponsive } from '@/composables/useChartResponsive'
 import { escapeHtml } from '@/utils/chartConfig'
 
 use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, GridComponent, LegendComponent])
 
 const store = useInvestmentStore()
-const isDark = useDark()
+const isDark = useThemeMode()
+const { isMobile } = useChartResponsive()
+const seriesLabels = computed(() =>
+  isMobile.value
+    ? {
+        equity: '偏股',
+        bond: '偏债',
+      }
+    : {
+        equity: '偏股比例',
+        bond: '偏债比例',
+      },
+)
 
 const chartOption = computed(() => {
   if (!store.deterministicResult) {
@@ -45,16 +58,18 @@ const chartOption = computed(() => {
       left: 'left',
       textStyle: {
         color: isDark.value ? '#f8fafc' : '#0f172a',
-        fontSize: 14,
+        fontSize: isMobile.value ? 13 : 14,
         fontWeight: 600,
       },
     },
     tooltip: {
       trigger: 'axis',
+      confine: true,
       backgroundColor: tooltipBg,
       borderColor: tooltipBorder,
       textStyle: {
         color: isDark.value ? '#f8fafc' : '#0f172a',
+        fontSize: isMobile.value ? 11 : 12,
       },
       formatter: (params: { seriesName: string; value: string; axisValue: string }[]) => {
         const month = params[0]?.axisValue ?? ''
@@ -66,16 +81,20 @@ const chartOption = computed(() => {
       },
     },
     legend: {
+      type: isMobile.value ? 'scroll' : 'plain',
       bottom: 0,
+      left: 0,
+      right: 0,
       icon: 'circle',
-      itemWidth: 8,
-      itemHeight: 8,
-      textStyle: { color: textColor, fontSize: 12 },
+      itemWidth: isMobile.value ? 6 : 8,
+      itemHeight: isMobile.value ? 6 : 8,
+      itemGap: isMobile.value ? 12 : 14,
+      textStyle: { color: textColor, fontSize: isMobile.value ? 10 : 12 },
     },
     grid: {
-      left: '0%',
+      left: isMobile.value ? '3%' : '0%',
       right: '2%',
-      bottom: '10%',
+      bottom: isMobile.value ? '18%' : '10%',
       top: '15%',
       containLabel: true,
     },
@@ -83,7 +102,12 @@ const chartOption = computed(() => {
       type: 'category',
       data: months,
       axisLine: { lineStyle: { color: axisLineColor } },
-      axisLabel: { color: textColor, fontSize: 11 },
+      axisLabel: {
+        color: textColor,
+        fontSize: isMobile.value ? 10 : 11,
+        interval: isMobile.value ? 'auto' : 0,
+        hideOverlap: true,
+      },
       axisTick: { show: false },
     },
     yAxis: {
@@ -92,15 +116,16 @@ const chartOption = computed(() => {
       max: 100,
       axisLine: { show: false },
       splitLine: { lineStyle: { color: splitLineColor } },
+      splitNumber: isMobile.value ? 4 : 5,
       axisLabel: {
         color: textColor,
-        fontSize: 11,
+        fontSize: isMobile.value ? 10 : 11,
         formatter: '{value}%',
       },
     },
     series: [
       {
-        name: '偏股比例',
+        name: seriesLabels.value.equity,
         type: 'line',
         stack: 'total',
         areaStyle: {
@@ -122,7 +147,7 @@ const chartOption = computed(() => {
         symbol: 'none',
       },
       {
-        name: '偏债比例',
+        name: seriesLabels.value.bond,
         type: 'line',
         stack: 'total',
         areaStyle: {
@@ -149,5 +174,5 @@ const chartOption = computed(() => {
 </script>
 
 <template>
-  <VChart :option="chartOption" autoresize style="height: 100%; min-height: 300px" />
+  <VChart :option="chartOption" autoresize :style="{ height: '100%', minHeight: isMobile ? '280px' : '300px' }" />
 </template>

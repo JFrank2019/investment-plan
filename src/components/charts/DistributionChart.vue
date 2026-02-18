@@ -12,13 +12,15 @@ import {
 import VChart from 'vue-echarts'
 import { useInvestmentStore } from '@/stores/investment'
 import { formatMoney } from '@/engine'
-import { useDark } from '@vueuse/core'
+import { useThemeMode } from '@/composables/useThemeMode'
+import { useChartResponsive } from '@/composables/useChartResponsive'
 import { getMoneyTextStyle, getMoneyAxisLabel, escapeHtml } from '@/utils/chartConfig'
 
 use([CanvasRenderer, BarChart, TitleComponent, TooltipComponent, GridComponent, MarkLineComponent])
 
 const store = useInvestmentStore()
-const isDark = useDark()
+const isDark = useThemeMode()
+const { isMobile } = useChartResponsive()
 
 const chartOption = computed(() => {
   if (!store.monteCarloResult) {
@@ -31,7 +33,7 @@ const chartOption = computed(() => {
   // 创建直方图数据
   const min = Math.min(...finalValues)
   const max = Math.max(...finalValues)
-  const binCount = 30
+  const binCount = isMobile.value ? 16 : 30
   const range = max - min
   const isSingleValueDistribution = !Number.isFinite(range) || range <= 0
   const binWidth = isSingleValueDistribution ? 1 : range / binCount
@@ -52,6 +54,35 @@ const chartOption = computed(() => {
     return formatMoney(binStart + binWidth / 2)
   })
 
+  // 计算关键分位点对应的 bin 索引
+  const p5Index = Math.max(
+    0,
+    Math.min(
+      binCount - 1,
+      isSingleValueDistribution
+        ? Math.floor(binCount / 2)
+        : Math.floor((stats.finalValueP5 - min) / binWidth),
+    ),
+  )
+  const p95Index = Math.max(
+    0,
+    Math.min(
+      binCount - 1,
+      isSingleValueDistribution
+        ? Math.floor(binCount / 2)
+        : Math.floor((stats.finalValueP95 - min) / binWidth),
+    ),
+  )
+  const medianIndex = Math.max(
+    0,
+    Math.min(
+      binCount - 1,
+      isSingleValueDistribution
+        ? Math.floor(binCount / 2)
+        : Math.floor((stats.finalValueMedian - min) / binWidth),
+    ),
+  )
+
   // Theme Colors (Slate / Financial Navy)
   const textColor = isDark.value ? '#94a3b8' : '#64748b'
   const axisLineColor = isDark.value ? '#334155' : '#e2e8f0'
@@ -59,36 +90,52 @@ const chartOption = computed(() => {
   const tooltipBg = isDark.value ? '#0f172a' : '#ffffff'
   const tooltipBorder = isDark.value ? '#1e293b' : '#e2e8f0'
 
+  // Series Colors
+  const barColorMain = isDark.value ? '#3b82f6' : '#2563eb' // Blue 500/600
+  const barColorTail = isDark.value ? '#334155' : '#cbd5e1' // Slate 700/300
+  const markLineColor = isDark.value ? '#94a3b8' : '#64748b' // Slate 400/500
+
   return {
     backgroundColor: 'transparent',
     title: {
-      text: '终值分布',
+      text: '终值分布概率',
       left: 'left',
       textStyle: {
         color: isDark.value ? '#f8fafc' : '#0f172a',
-        fontSize: 14,
+        fontSize: isMobile.value ? 13 : 14,
         fontWeight: 600,
       },
     },
     tooltip: {
       trigger: 'axis',
+      confine: true,
       backgroundColor: tooltipBg,
       borderColor: tooltipBorder,
       textStyle: {
         color: isDark.value ? '#f8fafc' : '#0f172a',
+        fontSize: isMobile.value ? 11 : 12,
         ...getMoneyTextStyle(),
       },
-      formatter: (params: { value: number; name: string }[]) => {
+      formatter: (params: { value: number; name: string; dataIndex: number }[]) => {
         const p = params[0]
         if (!p) return ''
-        return `<div class="money-text text-xs text-zinc-500 mb-1">区间中心值</div><div class="money-text font-bold mb-2">${escapeHtml(p.name)}</div><div class="money-text text-xs">频次: <span class="font-bold">${p.value}</span></div>`
+        const isTail = p.dataIndex < p5Index || p.dataIndex > p95Index
+        const label = isTail ? '极端概率区间' : '核心置信区间'
+        return `
+          <div class="mb-1 text-xs text-zinc-500">${label}</div>
+          <div class="money-text font-bold mb-2 text-sm">${escapeHtml(p.name)}</div>
+          <div class="flex justify-between gap-4 text-xs">
+            <span class="text-zinc-500">频次</span>
+            <span class="font-mono font-bold">${p.value}</span>
+          </div>
+        `
       },
     },
     grid: {
-      left: '0%',
+      left: isMobile.value ? '2%' : '0%',
       right: '2%',
-      bottom: '3%',
-      top: '15%',
+      bottom: isMobile.value ? '8%' : '3%',
+      top: '18%',
       containLabel: true,
     },
     xAxis: {
@@ -97,9 +144,10 @@ const chartOption = computed(() => {
       axisLine: { lineStyle: { color: axisLineColor } },
       axisLabel: {
         color: textColor,
-        rotate: 35,
-        interval: Math.floor(binCount / 5),
-        fontSize: 10,
+        rotate: isMobile.value ? 45 : 0,
+        interval: Math.max(1, Math.floor(binCount / (isMobile.value ? 4 : 6))),
+        fontSize: isMobile.value ? 9 : 10,
+        hideOverlap: true,
         ...getMoneyAxisLabel(),
       },
       axisTick: { show: false },
@@ -107,94 +155,62 @@ const chartOption = computed(() => {
     yAxis: {
       type: 'value',
       name: '频次',
-      nameTextStyle: { color: textColor, fontSize: 10, padding: [0, 0, 0, 20] },
+      nameTextStyle: {
+        color: textColor,
+        fontSize: isMobile.value ? 9 : 10,
+        padding: [0, 0, 0, isMobile.value ? 10 : 20],
+      },
       axisLine: { show: false },
-      splitLine: { lineStyle: { color: splitLineColor } },
-      axisLabel: { color: textColor, fontSize: 10 },
+      splitLine: { lineStyle: { color: splitLineColor, type: 'dashed' } },
+      axisLabel: { color: textColor, fontSize: isMobile.value ? 9 : 10 },
     },
     series: [
       {
         type: 'bar',
         data: bins,
         itemStyle: {
-          color: {
-            type: 'linear',
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: '#3b82f6' }, // Blue 500
-              { offset: 1, color: '#2563eb' }, // Blue 600
-            ],
+          color: (params: { dataIndex: number }) => {
+            // 核心区间 (5%-95%) 使用主色，尾部使用灰色
+            if (params.dataIndex >= p5Index && params.dataIndex <= p95Index) {
+              return barColorMain
+            }
+            return barColorTail
           },
           borderRadius: [2, 2, 0, 0],
         },
+        barMaxWidth: isMobile.value ? 18 : 24,
         markLine: {
           silent: true,
-          symbol: 'none',
-          lineStyle: { type: 'dashed' },
-          label: { position: 'start', fontSize: 10 },
+          symbol: ['none', 'none'],
+          label: {
+            show: true,
+            position: 'start',
+            formatter: '{b}',
+            fontSize: 10,
+            color: markLineColor,
+            padding: [0, 0, -15, 0], // Move label up
+          },
+          lineStyle: {
+            color: markLineColor,
+            type: 'dashed',
+            width: 1,
+            opacity: 0.7,
+          },
           data: [
             {
               name: '中位数',
-              xAxis:
-                binLabels[
-                  Math.max(
-                    0,
-                    Math.min(
-                      binCount - 1,
-                      isSingleValueDistribution
-                        ? Math.floor(binCount / 2)
-                        : Math.floor((stats.finalValueMedian - min) / binWidth),
-                    ),
-                  )
-                ],
-              lineStyle: { color: '#10b981', width: 2 }, // Emerald 500
-              label: {
-                formatter: '中位数',
-                color: '#10b981',
-              },
+              xAxis: binLabels[medianIndex],
+              lineStyle: { color: isDark.value ? '#10b981' : '#059669', width: 2, type: 'solid' }, // Emerald
+              label: { color: isDark.value ? '#10b981' : '#059669', fontWeight: 'bold' },
             },
             {
-              name: '5%分位',
-              xAxis:
-                binLabels[
-                  Math.max(
-                    0,
-                    Math.min(
-                      binCount - 1,
-                      isSingleValueDistribution
-                        ? Math.floor(binCount / 2)
-                        : Math.floor((stats.finalValueP5 - min) / binWidth),
-                    ),
-                  )
-                ],
-              lineStyle: { color: '#ef4444', width: 2 }, // Red 500
-              label: {
-                formatter: '5%',
-                color: '#ef4444',
-              },
+              name: 'P5',
+              xAxis: binLabels[p5Index],
             },
             {
-              name: '95%分位',
-              xAxis:
-                binLabels[
-                  Math.max(
-                    0,
-                    Math.min(
-                      binCount - 1,
-                      isSingleValueDistribution
-                        ? Math.floor(binCount / 2)
-                        : Math.floor((stats.finalValueP95 - min) / binWidth),
-                    ),
-                  )
-                ],
-              lineStyle: { color: '#f59e0b', width: 2 }, // Amber 500
-              label: {
-                formatter: '95%',
-                color: '#f59e0b',
-              },
+              name: 'P95',
+              xAxis: binLabels[p95Index],
+              label: { position: 'end' },
             },
           ],
         },
@@ -205,5 +221,5 @@ const chartOption = computed(() => {
 </script>
 
 <template>
-  <VChart :option="chartOption" autoresize style="height: 100%; min-height: 350px" />
+  <VChart :option="chartOption" autoresize :style="{ height: '100%', minHeight: isMobile ? '300px' : '350px' }" />
 </template>

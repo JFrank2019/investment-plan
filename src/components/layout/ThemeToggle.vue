@@ -1,14 +1,10 @@
 <script setup lang="ts">
-import { useDark, useToggle } from '@vueuse/core'
+import { useToggle } from '@vueuse/core'
 import { Sun, Moon } from 'lucide-vue-next'
+import { useThemeMode } from '@/composables/useThemeMode'
 
-// useDark 自动持久化到 localStorage，key 为 'vueuse-color-scheme'
-// 首次访问时会跟随系统偏好，用户手动切换后会记住选择
-const isDark = useDark({
-  selector: 'html',
-  attribute: 'class',
-  storageKey: 'theme-preference',
-})
+// 主题状态统一由 useThemeMode 管理，避免多个组件各自维护造成冲突
+const isDark = useThemeMode()
 
 const toggleDark = useToggle(isDark)
 </script>
