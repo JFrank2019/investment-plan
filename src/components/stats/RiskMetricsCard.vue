@@ -15,32 +15,33 @@ const rm = computed(() => store.monteCarloResult?.statistics?.riskMetrics)
 
 // 辅助函数：根据数值获取颜色类名
 const getRatioColor = (val: number) => {
-  if (val >= 1) return 'text-emerald-600 dark:text-emerald-500'
-  if (val >= 0.5) return 'text-amber-600 dark:text-amber-500'
-  return 'text-rose-600 dark:text-rose-500'
+  if (val >= 1) return 'text-emerald-600 dark:text-emerald-400'
+  if (val >= 0.5) return 'text-amber-600 dark:text-amber-400'
+  return 'text-rose-500 dark:text-rose-400'
 }
 
 const getProbColor = (val: number, isGoodHigh = true) => {
   if (isGoodHigh) {
     return val >= 0.8
-      ? 'text-emerald-600 dark:text-emerald-500'
+      ? 'text-emerald-600 dark:text-emerald-400'
       : val >= 0.5
-        ? 'text-amber-600 dark:text-amber-500'
-        : 'text-rose-600 dark:text-rose-500'
+        ? 'text-amber-600 dark:text-amber-400'
+        : 'text-rose-500 dark:text-rose-400'
   }
   return val < 0.1
-    ? 'text-emerald-600 dark:text-emerald-500'
+    ? 'text-emerald-600 dark:text-emerald-400'
     : val < 0.3
-      ? 'text-amber-600 dark:text-amber-500'
-      : 'text-rose-600 dark:text-rose-500'
+      ? 'text-amber-600 dark:text-amber-400'
+      : 'text-rose-500 dark:text-rose-400'
 }
 </script>
 
 <template>
-  <div v-if="rm" class="data-panel overflow-hidden">
+  <div v-if="rm" class="animate-fade-up data-panel overflow-hidden" style="animation-delay: 100ms">
     <!-- Header -->
     <div
-      class="flex items-center justify-between border-b border-zinc-100 bg-zinc-50/50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/30"
+      class="flex items-center justify-between border-b px-6 py-4"
+      style="border-color: var(--border-color); background: var(--bg-secondary)"
     >
       <div class="flex items-center gap-2">
         <Activity class="h-4 w-4 icon-base" />
@@ -52,11 +53,9 @@ const getProbColor = (val: number, isGoodHigh = true) => {
     </div>
 
     <!-- Data Grid -->
-    <div
-      class="grid grid-cols-1 divide-y divide-zinc-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:divide-zinc-800"
-    >
+    <div class="grid grid-cols-1 sm:grid-cols-3">
       <!-- Column 1: Efficiency (回报效率) -->
-      <div class="p-4 sm:p-6">
+      <div class="border-b p-4 sm:border-b-0 sm:border-r sm:p-6" style="border-color: var(--border-color)">
         <h4
           class="mb-3 sm:mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
         >
@@ -126,7 +125,7 @@ const getProbColor = (val: number, isGoodHigh = true) => {
       </div>
 
       <!-- Column 2: Downside (下行风险) -->
-      <div class="p-4 sm:p-6">
+      <div class="border-b p-4 sm:border-b-0 sm:border-r sm:p-6" style="border-color: var(--border-color)">
         <h4
           class="mb-3 sm:mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
         >
@@ -140,7 +139,7 @@ const getProbColor = (val: number, isGoodHigh = true) => {
               <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">平均最大回撤</span>
               <span class="text-[10px] text-zinc-400">历史平均跌幅</span>
             </div>
-            <span class="font-mono text-base font-bold text-rose-600 dark:text-rose-500">
+            <span class="font-mono text-base font-bold text-rose-500 dark:text-rose-400">
               {{ formatPercent(rm.maxDrawdownMean) }}
             </span>
           </div>
@@ -153,7 +152,7 @@ const getProbColor = (val: number, isGoodHigh = true) => {
               <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">VaR (95%)</span>
               <span class="text-[10px] text-zinc-400">极端情况潜在亏损</span>
             </div>
-            <span class="font-mono text-base font-bold text-amber-600 dark:text-amber-500">
+            <span class="font-mono text-base font-bold text-amber-600 dark:text-amber-400">
               {{ formatPercent(rm.var95Percent) }}
             </span>
           </div>
@@ -174,7 +173,7 @@ const getProbColor = (val: number, isGoodHigh = true) => {
       </div>
 
       <!-- Column 3: Probability (概率分布) -->
-      <div class="p-4 sm:p-6 bg-zinc-50/50 dark:bg-zinc-900/20">
+      <div class="p-4 sm:p-6" style="background: var(--bg-secondary)">
         <h4
           class="mb-3 sm:mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
         >
@@ -229,7 +228,8 @@ const getProbColor = (val: number, isGoodHigh = true) => {
           </div>
 
           <div
-            class="mt-4 sm:mt-6 flex items-start gap-2 rounded bg-zinc-100 p-3 text-[10px] leading-relaxed text-zinc-500 dark:bg-zinc-800/50 dark:text-zinc-400"
+            class="mt-4 flex items-start gap-2 rounded-md p-3 text-[10px] leading-relaxed text-zinc-500 sm:mt-6"
+            style="background: var(--input-bg)"
           >
             <Info class="mt-0.5 h-3 w-3 shrink-0" />
             <p>基于 {{ store.params.monteCarloPathCount }} 次蒙特卡洛模拟结果统计。</p>

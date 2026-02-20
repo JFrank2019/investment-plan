@@ -44,12 +44,11 @@ const chartOption = computed(() => {
   const equityRatios = states.map((s) => (s.equityRatio * 100).toFixed(1))
   const bondRatios = states.map((s) => ((1 - s.equityRatio) * 100).toFixed(1))
 
-  // Theme Colors (Slate / Financial Navy)
   const textColor = isDark.value ? '#94a3b8' : '#64748b'
-  const axisLineColor = isDark.value ? '#334155' : '#e2e8f0'
-  const splitLineColor = isDark.value ? '#1e293b' : '#f1f5f9'
-  const tooltipBg = isDark.value ? '#0f172a' : '#ffffff'
-  const tooltipBorder = isDark.value ? '#1e293b' : '#e2e8f0'
+  const axisLineColor = isDark.value ? 'rgba(255,255,255,0.06)' : '#e2e8f0'
+  const splitLineColor = isDark.value ? 'rgba(255,255,255,0.04)' : '#f1f5f9'
+  const tooltipBg = isDark.value ? '#161820' : '#ffffff'
+  const tooltipBorder = isDark.value ? 'rgba(255,255,255,0.06)' : '#e2e8f0'
 
   return {
     backgroundColor: 'transparent',

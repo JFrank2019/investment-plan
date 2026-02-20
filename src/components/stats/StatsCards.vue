@@ -53,24 +53,25 @@ const stats = computed(() => {
 const getValueColor = (val: number, isGoodHigh = true) => {
   if (isGoodHigh) {
     return val > 0
-      ? 'text-emerald-600 dark:text-emerald-500'
+      ? 'text-emerald-600 dark:text-emerald-400'
       : val < 0
-        ? 'text-rose-600 dark:text-rose-500'
+        ? 'text-rose-500 dark:text-rose-400'
         : 'text-zinc-500'
   }
   return val < 0.1
-    ? 'text-emerald-600 dark:text-emerald-500'
+    ? 'text-emerald-600 dark:text-emerald-400'
     : val < 0.3
-      ? 'text-amber-600 dark:text-amber-500'
-      : 'text-rose-600 dark:text-rose-500'
+      ? 'text-amber-600 dark:text-amber-400'
+      : 'text-rose-500 dark:text-rose-400'
 }
 </script>
 
 <template>
-  <div v-if="stats" class="data-panel overflow-hidden">
+  <div v-if="stats" class="animate-fade-up data-panel overflow-hidden">
     <!-- Header -->
     <div
-      class="flex items-center justify-between border-b border-zinc-100 bg-zinc-50/50 px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900/30"
+      class="flex items-center justify-between border-b px-6 py-4"
+      style="border-color: var(--border-color); background: var(--bg-secondary)"
     >
       <div class="flex items-center gap-2">
         <Target class="h-4 w-4 icon-base" />
@@ -82,10 +83,11 @@ const getValueColor = (val: number, isGoodHigh = true) => {
     </div>
 
     <div
-      class="grid grid-cols-1 divide-y divide-zinc-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0 dark:divide-zinc-800"
+      class="grid grid-cols-1 sm:grid-cols-3"
+      style="--divide-color: var(--border-color)"
     >
       <!-- Column 1: Core Value (核心资产) -->
-      <div class="p-4 sm:p-6">
+      <div class="border-b p-4 sm:border-b-0 sm:border-r sm:p-6" style="border-color: var(--border-color)">
         <h4
           class="mb-3 sm:mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
         >
@@ -135,7 +137,7 @@ const getValueColor = (val: number, isGoodHigh = true) => {
       </div>
 
       <!-- Column 2: Returns (收益率) -->
-      <div class="p-4 sm:p-6">
+      <div class="border-b p-4 sm:border-b-0 sm:border-r sm:p-6" style="border-color: var(--border-color)">
         <h4
           class="mb-3 sm:mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
         >
@@ -188,7 +190,7 @@ const getValueColor = (val: number, isGoodHigh = true) => {
       </div>
 
       <!-- Column 3: Range & Allocation (区间与配置) -->
-      <div class="p-4 sm:p-6 bg-zinc-50/50 dark:bg-zinc-900/20">
+      <div class="p-4 sm:p-6" style="background: var(--bg-secondary)">
         <h4
           class="mb-3 sm:mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400"
         >

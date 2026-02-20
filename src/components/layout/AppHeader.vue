@@ -10,17 +10,19 @@ const navItems = [{ path: '/simulator', label: '模拟器', icon: BarChart3 }]
 
 <template>
   <header
-    class="sticky top-0 z-50 w-full border-b border-zinc-200 bg-white/80 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80"
+    class="sticky top-0 z-50 w-full border-b"
+    style="border-color: var(--border-color); background: color-mix(in srgb, var(--bg-color) 85%, transparent)"
+    :style="{ backdropFilter: 'blur(12px) saturate(180%)' }"
   >
     <div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
       <!-- Logo -->
-      <RouterLink to="/" class="flex items-center gap-2.5 group">
+      <RouterLink to="/" class="group flex items-center gap-2.5">
         <div
-          class="flex h-8 w-8 items-center justify-center rounded bg-zinc-900 text-white transition-transform group-hover:scale-105 dark:bg-white dark:text-zinc-900"
+          class="flex h-8 w-8 items-center justify-center rounded-md bg-zinc-900 text-white transition-transform group-hover:scale-105 dark:bg-white dark:text-zinc-900"
         >
           <TrendingUp class="h-4 w-4" />
         </div>
-        <span class="font-mono text-sm font-bold tracking-tight text-zinc-900 dark:text-white"
+        <span class="money-text text-sm font-bold tracking-tight text-zinc-900 dark:text-white"
           >INVEST.PLAN</span
         >
       </RouterLink>
@@ -42,7 +44,7 @@ const navItems = [{ path: '/simulator', label: '模拟器', icon: BarChart3 }]
           <span class="hidden sm:inline">{{ item.label }}</span>
         </RouterLink>
 
-        <div class="h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
+        <div class="h-4 w-px" style="background: var(--border-color)" />
 
         <ThemeToggle />
       </nav>

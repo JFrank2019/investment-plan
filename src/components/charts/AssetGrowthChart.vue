@@ -57,12 +57,11 @@ const chartOption = computed(() => {
         purchasingPower: '实际购买力',
       }
 
-  // Theme Colors (Slate / Financial Navy)
-  const textColor = isDark.value ? '#94a3b8' : '#64748b' // Slate 400 / 500
-  const axisLineColor = isDark.value ? '#334155' : '#e2e8f0' // Slate 700 / 200
-  const splitLineColor = isDark.value ? '#1e293b' : '#f1f5f9' // Slate 800 / 100
-  const tooltipBg = isDark.value ? '#0f172a' : '#ffffff' // Slate 900 / White
-  const tooltipBorder = isDark.value ? '#1e293b' : '#e2e8f0' // Slate 800 / 200
+  const textColor = isDark.value ? '#94a3b8' : '#64748b'
+  const axisLineColor = isDark.value ? 'rgba(255,255,255,0.06)' : '#e2e8f0'
+  const splitLineColor = isDark.value ? 'rgba(255,255,255,0.04)' : '#f1f5f9'
+  const tooltipBg = isDark.value ? '#161820' : '#ffffff'
+  const tooltipBorder = isDark.value ? 'rgba(255,255,255,0.06)' : '#e2e8f0'
 
   return {
     backgroundColor: 'transparent',
@@ -171,7 +170,7 @@ const chartOption = computed(() => {
         data: p5Values,
         lineStyle: { opacity: 0 },
         areaStyle: {
-          color: isDark.value ? '#020617' : '#ffffff', // Mask with bg color
+          color: isDark.value ? '#0f1115' : '#fafbfc',
         },
         stack: 'confidence',
         symbol: 'none',

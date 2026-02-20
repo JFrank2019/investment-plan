@@ -380,7 +380,7 @@ function handleInflationRateChange(event: Event) {
     </div>
 
     <!-- 投入汇总面板 -->
-    <div class="data-panel p-4 bg-zinc-50 dark:bg-zinc-900/50">
+    <div class="data-panel p-4" style="background: var(--bg-secondary)">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-4">
           <div>

@@ -56,11 +56,15 @@ function handleApplyPreset(preset: PortfolioPreset) {
         :key="preset.id"
         @click="handleApplyPreset(preset)"
         :class="[
-          'group relative rounded-sm border p-4 text-left transition-all',
+          'group relative rounded-md p-4 text-left transition-all',
           currentPresetId === preset.id
-            ? 'border-zinc-900 bg-zinc-50 dark:border-white dark:bg-white/5'
-            : 'border-zinc-200 bg-white hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-600',
+            ? 'ring-1 ring-zinc-900 dark:ring-white'
+            : 'hover:border-zinc-400 dark:hover:border-zinc-600',
         ]"
+        :style="{
+          background: currentPresetId === preset.id ? 'var(--bg-secondary)' : 'var(--panel-bg)',
+          border: '1px solid var(--border-color)',
+        }"
       >
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0 flex-1">
@@ -104,7 +108,8 @@ function handleApplyPreset(preset: PortfolioPreset) {
 
         <!-- Mini Stats -->
         <div
-          class="mt-3 grid grid-cols-3 gap-2 border-t border-zinc-100 pt-3 text-[10px] dark:border-zinc-800/50"
+          class="mt-3 grid grid-cols-3 gap-2 border-t pt-3 text-[10px]"
+          style="border-color: var(--border-color)"
         >
           <div>
             <span class="text-zinc-400">Equity</span>

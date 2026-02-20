@@ -1,11 +1,8 @@
 @import 'tailwindcss';
 
-/* Tailwind CSS v4 暗色模式配置 - 使用类选择器而非媒体查询 */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Tailwind CSS v4 主题配置 - 金融专业风格 */
 @theme {
-  /* 重写 Zinc 色板为 Slate (深海蓝灰)，实现全局"金融蓝"风格 */
   --color-zinc-50: #f8fafc;
   --color-zinc-100: #f1f5f9;
   --color-zinc-200: #e2e8f0;
@@ -16,9 +13,8 @@
   --color-zinc-700: #334155;
   --color-zinc-800: #1e293b;
   --color-zinc-900: #0f172a;
-  --color-zinc-950: #020617;
+  --color-zinc-950: #0a0b10;
 
-  /* 主色调 - 极简白 & 深海蓝 */
   --color-primary-50: var(--color-zinc-50);
   --color-primary-100: var(--color-zinc-100);
   --color-primary-200: var(--color-zinc-200);
@@ -32,22 +28,22 @@
   --color-primary: var(--color-zinc-900);
   --color-primary-dark: var(--color-zinc-50);
 
-  /* 语义色 - 更加稳重的金融色 */
-  --color-success: #10b981; /* Emerald 500 - 收益 */
-  --color-danger: #ef4444; /* Red 500 - 亏损 */
-  --color-warning: #f59e0b; /* Amber 500 - 预警 */
-  --color-info: #3b82f6; /* Blue 500 - 操作/链接 */
+  --color-success: #10b981;
+  --color-danger: #f43f5e;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
 
-  /* 金融数字字体 */
   --font-money: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, Monaco, Consolas, monospace;
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-heading: 'DM Sans', system-ui, -apple-system, sans-serif;
 }
 
-/* 基础样式 */
+/* ========== BASE ========== */
+
 html {
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 body {
@@ -56,80 +52,141 @@ body {
   color: var(--text-primary);
 }
 
-/* 亮色主题（默认）- 极简白 (Paper White) */
+/* ========== LIGHT THEME ========== */
+
 :root {
-  --bg-color: #ffffff;
+  --bg-color: #fafbfc;
   --bg-secondary: var(--color-zinc-50);
   --text-primary: var(--color-zinc-900);
   --text-secondary: var(--color-zinc-500);
   --border-color: var(--color-zinc-200);
   --panel-bg: #ffffff;
+  --panel-bg-elevated: #ffffff;
   --input-bg: var(--color-zinc-50);
-  --focus-ring: rgba(15, 23, 42, 0.1);
+  --focus-ring: rgba(15, 23, 42, 0.08);
+  --glow-success: rgba(16, 185, 129, 0.15);
+  --glow-danger: rgba(244, 63, 94, 0.15);
+  --skeleton-from: #e2e8f0;
+  --skeleton-to: #f1f5f9;
 }
 
-/* 暗色主题 - 深海蓝 (Deep Navy) */
+/* ========== DARK THEME ========== */
+
 .dark {
-  --bg-color: var(--color-zinc-950);
-  --bg-secondary: var(--color-zinc-900);
+  --bg-color: #0f1115;
+  --bg-secondary: #161820;
   --text-primary: var(--color-zinc-50);
   --text-secondary: var(--color-zinc-400);
-  --border-color: var(--color-zinc-800);
-  --panel-bg: var(--color-zinc-950);
-  --input-bg: var(--color-zinc-900);
-  --focus-ring: rgba(56, 189, 248, 0.15);
+  --border-color: rgba(255, 255, 255, 0.06);
+  --panel-bg: #161820;
+  --panel-bg-elevated: #1c1e28;
+  --input-bg: #1c1e28;
+  --focus-ring: rgba(56, 189, 248, 0.1);
+  --glow-success: rgba(16, 185, 129, 0.08);
+  --glow-danger: rgba(244, 63, 94, 0.08);
+  --skeleton-from: #1c1e28;
+  --skeleton-to: #252730;
 }
 
-/* 全局应用背景 */
+/* ========== APP SHELL ========== */
+
 #app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* 数据面板 */
+/* ========== DATA PANEL ========== */
+
 .data-panel {
   background-color: var(--panel-bg);
   border: 1px solid var(--border-color);
-  @apply rounded-sm;
+  border-radius: 6px;
 }
 
-/* 交互式面板 hover 效果 */
 .data-panel--interactive {
   transition:
     border-color 0.2s ease,
-    transform 0.2s ease;
+    box-shadow 0.2s ease;
 }
+
 .data-panel--interactive:hover {
   border-color: var(--text-secondary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-/* 强调文字 */
-.highlight-text {
-  color: var(--text-primary);
-  font-weight: 600;
+.dark .data-panel--interactive:hover {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-/* 主按钮 - 高对比度黑白风格 */
+/* ========== GLASS CARD (for home page) ========== */
+
+.glass-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  backdrop-filter: blur(12px);
+}
+
+.dark .glass-card {
+  background: rgba(22, 24, 32, 0.8);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.glass-card--interactive {
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+.glass-card--interactive:hover {
+  border-color: var(--text-secondary);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.dark .glass-card--interactive:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* ========== GRADIENT TEXT ========== */
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-zinc-900) 0%, var(--color-zinc-600) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark .gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, var(--color-zinc-400) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ========== BUTTONS ========== */
+
 .btn-primary {
-  @apply px-4 py-2 rounded-sm font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2;
+  @apply px-4 py-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2;
   background-color: var(--text-primary);
   color: var(--bg-color);
   border: 1px solid transparent;
+  border-radius: 6px;
 }
 
 .btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0.88;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .dark .btn-primary:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 .btn-primary:active {
-  transform: translateY(0);
+  transform: scale(0.98);
 }
 
 .btn-primary:disabled {
@@ -138,12 +195,12 @@ body {
   transform: none;
 }
 
-/* 次级按钮 */
 .btn-secondary {
-  @apply px-4 py-2 rounded-sm font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2;
+  @apply px-4 py-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2;
   background-color: transparent;
   border: 1px solid var(--border-color);
   color: var(--text-primary);
+  border-radius: 6px;
 }
 
 .btn-secondary:hover {
@@ -151,25 +208,27 @@ body {
   border-color: var(--text-secondary);
 }
 
-/* 危险按钮 */
 .btn-danger {
-  @apply px-4 py-2 rounded-sm font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2;
+  @apply px-4 py-2 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2;
   background-color: transparent;
   border: 1px solid var(--color-danger);
   color: var(--color-danger);
+  border-radius: 6px;
 }
 
 .btn-danger:hover {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: rgba(244, 63, 94, 0.08);
 }
 
-/* 输入框样式 */
+/* ========== INPUT ========== */
+
 .input-field {
-  @apply w-full px-3 py-2 rounded-sm text-sm transition-all duration-200;
+  @apply w-full px-3 py-2 text-sm transition-all duration-200;
   background-color: var(--input-bg);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
   font-family: var(--font-money);
+  border-radius: 6px;
 }
 
 .input-field:hover {
@@ -187,7 +246,6 @@ body {
   cursor: not-allowed;
 }
 
-/* 下拉选择框 */
 select.input-field {
   appearance: none;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
@@ -201,7 +259,6 @@ select.input-field {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
 }
 
-/* 隐藏数字输入框的原生 spinner */
 .input-field[type='number']::-webkit-outer-spin-button,
 .input-field[type='number']::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -211,10 +268,11 @@ select.input-field {
   -moz-appearance: textfield;
 }
 
-/* 滚动条样式 */
+/* ========== SCROLLBAR ========== */
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -227,7 +285,8 @@ select.input-field {
   background: var(--text-secondary);
 }
 
-/* 金融数字字体 */
+/* ========== TYPOGRAPHY UTILITIES ========== */
+
 .money-text {
   font-family: var(--font-money);
   font-variant-numeric: tabular-nums;
@@ -235,16 +294,100 @@ select.input-field {
   letter-spacing: -0.02em;
 }
 
-/* 辅助类 */
 .text-label {
   @apply text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400;
 }
 
 .section-divider {
-  @apply border-t border-zinc-100 dark:border-zinc-800 my-4;
+  @apply my-4;
+  border-top: 1px solid var(--border-color);
 }
 
-/* 图标通用样式 */
 .icon-base {
   @apply text-zinc-500 dark:text-zinc-400;
+}
+
+/* ========== ANIMATIONS ========== */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-from) 25%,
+    var(--skeleton-to) 37%,
+    var(--skeleton-from) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s ease-out both;
+}
+
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* Stagger children entrance */
+.stagger-children > * {
+  animation: fade-up 0.4s ease-out both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 360ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 420ms; }
+
+/* ========== PILL BADGE ========== */
+
+.pill-badge {
+  @apply inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium;
+  border-radius: 999px;
+}
+
+.pill-badge--success {
+  background: var(--glow-success);
+  color: var(--color-success);
+}
+
+.pill-badge--danger {
+  background: var(--glow-danger);
+  color: var(--color-danger);
+}
+
+.pill-badge--neutral {
+  background: rgba(100, 116, 139, 0.1);
+  color: var(--text-secondary);
+}
+
+/* ========== SUBTLE BACKGROUND TEXTURE (dark mode) ========== */
+
+.bg-grid-pattern {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
 }

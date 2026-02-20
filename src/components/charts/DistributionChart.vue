@@ -83,17 +83,15 @@ const chartOption = computed(() => {
     ),
   )
 
-  // Theme Colors (Slate / Financial Navy)
   const textColor = isDark.value ? '#94a3b8' : '#64748b'
-  const axisLineColor = isDark.value ? '#334155' : '#e2e8f0'
-  const splitLineColor = isDark.value ? '#1e293b' : '#f1f5f9'
-  const tooltipBg = isDark.value ? '#0f172a' : '#ffffff'
-  const tooltipBorder = isDark.value ? '#1e293b' : '#e2e8f0'
+  const axisLineColor = isDark.value ? 'rgba(255,255,255,0.06)' : '#e2e8f0'
+  const splitLineColor = isDark.value ? 'rgba(255,255,255,0.04)' : '#f1f5f9'
+  const tooltipBg = isDark.value ? '#161820' : '#ffffff'
+  const tooltipBorder = isDark.value ? 'rgba(255,255,255,0.06)' : '#e2e8f0'
 
-  // Series Colors
-  const barColorMain = isDark.value ? '#3b82f6' : '#2563eb' // Blue 500/600
-  const barColorTail = isDark.value ? '#334155' : '#cbd5e1' // Slate 700/300
-  const markLineColor = isDark.value ? '#94a3b8' : '#64748b' // Slate 400/500
+  const barColorMain = isDark.value ? '#3b82f6' : '#2563eb'
+  const barColorTail = isDark.value ? '#252730' : '#cbd5e1'
+  const markLineColor = isDark.value ? '#94a3b8' : '#64748b'
 
   return {
     backgroundColor: 'transparent',
