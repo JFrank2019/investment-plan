@@ -24,7 +24,7 @@ describe('App', () => {
     // 等待路由就绪
     await router.isReady()
 
-    // 应该渲染标题
-    expect(wrapper.text()).toContain('投资模拟器')
+    // 应该渲染应用品牌标识
+    expect(wrapper.text()).toContain('INVEST.PLAN')
   })
 })

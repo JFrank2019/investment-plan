@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { randomNormal, runMonteCarloSimulation } from '@/engine/monteCarlo'
+import {
+  convertToMonthlyParams,
+  randomNormal,
+  randomNormalWithParams,
+  runMonteCarloSimulation,
+  runMonteCarloSimulationBatched,
+} from '@/engine/monteCarlo'
 import { DEFAULT_PARAMS } from '@/engine/types'
 import { mean, standardDeviation } from '@/engine/statistics'
 
@@ -15,6 +21,30 @@ describe('蒙特卡洛模拟引擎', () => {
       expect(mean(samples)).toBeCloseTo(0, 1)
       // 标准差应接近1
       expect(standardDeviation(samples)).toBeCloseTo(1, 1)
+    })
+  })
+
+  describe('参数转换与随机分布工具', () => {
+    it('convertToMonthlyParams 应正确换算月度参数', () => {
+      const annualReturn = 0.12
+      const annualVolatility = 0.24
+      const monthly = convertToMonthlyParams(annualReturn, annualVolatility)
+
+      expect(monthly.monthlyReturn).toBeCloseTo(0.01, 8)
+      expect(monthly.monthlyVolatility).toBeCloseTo(0.24 / Math.sqrt(12), 8)
+    })
+
+    it('randomNormalWithParams 应生成接近目标均值和标准差的样本', () => {
+      const samples: number[] = []
+      const targetMean = 0.02
+      const targetStd = 0.05
+
+      for (let i = 0; i < 8000; i++) {
+        samples.push(randomNormalWithParams(targetMean, targetStd))
+      }
+
+      expect(mean(samples)).toBeCloseTo(targetMean, 2)
+      expect(standardDeviation(samples)).toBeCloseTo(targetStd, 2)
     })
   })
 
@@ -78,7 +108,7 @@ describe('蒙特卡洛模拟引擎', () => {
       // 所有路径的终值应该相同
       const finalValues = result.paths.map((p) => p.finalValue)
       const variance =
-        finalValues.reduce((sum, v) => sum + Math.pow(v - finalValues[0], 2), 0) /
+        finalValues.reduce((sum, v) => sum + Math.pow(v - finalValues[0]!, 2), 0) /
         finalValues.length
       expect(variance).toBeLessThan(1) // 几乎为0
     })
@@ -141,6 +171,81 @@ describe('蒙特卡洛模拟引擎', () => {
     })
   })
 
+  describe('runMonteCarloSimulationBatched', () => {
+    it('应生成指定数量路径并正确上报进度', async () => {
+      const params = { ...DEFAULT_PARAMS, monteCarloPathCount: 64, simulationMonths: 3 }
+      const progressEvents: Array<{ completed: number; total: number }> = []
+
+      const result = await runMonteCarloSimulationBatched(params, 0.03, {
+        chunkSize: 8,
+        yieldIntervalMs: 16,
+        onProgress: (completed, total) => progressEvents.push({ completed, total }),
+      })
+
+      expect(result.paths.length).toBe(params.monteCarloPathCount)
+      expect(progressEvents.length).toBeGreaterThan(0)
+      expect(progressEvents[progressEvents.length - 1]!).toEqual({
+        completed: params.monteCarloPathCount,
+        total: params.monteCarloPathCount,
+      })
+    })
+
+    it('零波动率下 batched 结果应与同步版本一致', async () => {
+      const params = {
+        ...DEFAULT_PARAMS,
+        monteCarloPathCount: 12,
+        simulationMonths: 6,
+        equityVolatility: 0,
+        bondVolatility: 0,
+      }
+
+      const sync = runMonteCarloSimulation(params)
+      const batched = await runMonteCarloSimulationBatched(params)
+
+      expect(batched.paths.map((p) => p.finalValue)).toEqual(sync.paths.map((p) => p.finalValue))
+      expect(batched.statistics.finalValueMedian).toBeCloseTo(sync.statistics.finalValueMedian, 10)
+    })
+  })
+
+  describe('极端参数场景', () => {
+    it('初始资金与定投都为0时应稳定返回非负资产', () => {
+      const params = {
+        ...DEFAULT_PARAMS,
+        simulationMonths: 1,
+        initialCapital: 0,
+        weeklyInvestment: 0,
+        monteCarloPathCount: 5,
+      }
+      const result = runMonteCarloSimulation(params)
+
+      expect(result.paths).toHaveLength(5)
+      result.paths.forEach((path) => {
+        expect(path.states).toHaveLength(2)
+        expect(path.finalValue).toBeGreaterThanOrEqual(0)
+        expect(path.states[1]?.cumulativeInvestment).toBe(0)
+      })
+    })
+
+    it('每月再平衡时应回归目标仓位', () => {
+      const params = {
+        ...DEFAULT_PARAMS,
+        simulationMonths: 4,
+        monteCarloPathCount: 3,
+        equityVolatility: 0,
+        bondVolatility: 0,
+        rebalancePeriod: 1,
+        rebalanceTargetEquityRatio: 0.4,
+      }
+      const result = runMonteCarloSimulation(params)
+
+      result.paths.forEach((path) => {
+        for (let month = 1; month <= params.simulationMonths; month++) {
+          expect(path.states[month]?.equityRatio).toBeCloseTo(0.4, 8)
+        }
+      })
+    })
+  })
+
   describe('通胀调整', () => {
     it('应该计算实际购买力的置信区间', () => {
       const params = {
@@ -152,7 +257,7 @@ describe('蒙特卡洛模拟引擎', () => {
       const result = runMonteCarloSimulation(params)
 
       // 检查置信区间包含实际购买力数据
-      const finalBand = result.statistics.confidenceBands[params.simulationMonths]
+      const finalBand = result.statistics.confidenceBands[params.simulationMonths]!
       expect(finalBand.realMedian).toBeDefined()
       expect(finalBand.realP5).toBeDefined()
       expect(finalBand.realP95).toBeDefined()
@@ -171,7 +276,7 @@ describe('蒙特卡洛模拟引擎', () => {
       }
       const result = runMonteCarloSimulation(params)
 
-      const finalBand = result.statistics.confidenceBands[params.simulationMonths]
+      const finalBand = result.statistics.confidenceBands[params.simulationMonths]!
       expect(finalBand.realMedian).toBeLessThan(finalBand.median)
     })
 
@@ -184,7 +289,7 @@ describe('蒙特卡洛模拟引擎', () => {
       }
       const result = runMonteCarloSimulation(params)
 
-      const finalBand = result.statistics.confidenceBands[params.simulationMonths]
+      const finalBand = result.statistics.confidenceBands[params.simulationMonths]!
       expect(finalBand.realMedian).toBeCloseTo(finalBand.median, 0)
     })
   })

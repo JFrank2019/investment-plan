@@ -1,4 +1,8 @@
 import type { SimulationPath, SimulationStatistics, ConfidenceBand, RiskMetrics } from './types'
+import {
+  calculateMaxDrawdown as calculateMaxDrawdownShared,
+  percentileFromSorted,
+} from './simulationShared'
 
 function safeDivide(numerator: number, denominator: number): number {
   if (denominator === 0) return 0
@@ -49,13 +53,7 @@ export function calculateRealReturn(nominalReturn: number, inflation: number): n
 export function percentile(arr: number[], p: number): number {
   if (arr.length === 0) return 0
   const sorted = [...arr].sort((a, b) => a - b)
-  const index = (p / 100) * (sorted.length - 1)
-  const lower = Math.floor(index)
-  const upper = Math.ceil(index)
-  const lowerVal = sorted[lower] ?? 0
-  const upperVal = sorted[upper] ?? 0
-  if (lower === upper) return lowerVal
-  return lowerVal * (upper - index) + upperVal * (index - lower)
+  return percentileFromSorted(sorted, p)
 }
 
 /**
@@ -87,22 +85,7 @@ export function standardDeviation(arr: number[]): number {
  * 计算最大回撤
  */
 export function maxDrawdown(values: number[]): number {
-  if (values.length === 0) return 0
-
-  let maxDD = 0
-  let peak = values[0] ?? 0
-
-  for (const value of values) {
-    if (value > peak) {
-      peak = value
-    }
-    const dd = peak > 0 ? (peak - value) / peak : 0
-    if (dd > maxDD) {
-      maxDD = dd
-    }
-  }
-
-  return maxDD
+  return calculateMaxDrawdownShared(values)
 }
 
 /**

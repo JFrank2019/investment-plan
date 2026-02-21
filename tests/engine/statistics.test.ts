@@ -5,6 +5,7 @@ import {
   median,
   standardDeviation,
   maxDrawdown,
+  calculateStatistics,
   formatMoney,
   formatPercent,
   annualToMonthlyInflation,
@@ -18,6 +19,32 @@ import {
   calculateRiskMetrics,
 } from '@/engine/statistics'
 import type { SimulationPath } from '@/engine/types'
+
+function buildPath(values: number[], initialInvestment: number = 100): SimulationPath {
+  const states = values.map((value, index) => ({
+    month: index,
+    equityAsset: value,
+    bondAsset: 0,
+    totalAsset: value,
+    equityRatio: value > 0 ? 1 : 0,
+    cumulativeInvestment: initialInvestment,
+    profit: value - initialInvestment,
+    profitRate: initialInvestment > 0 ? (value - initialInvestment) / initialInvestment : 0,
+    cumulativeInflation: 0,
+    realTotalAsset: value,
+    realProfit: value - initialInvestment,
+    realProfitRate: initialInvestment > 0 ? (value - initialInvestment) / initialInvestment : 0,
+  }))
+
+  const finalState = states[states.length - 1]
+
+  return {
+    states,
+    finalValue: finalState?.totalAsset ?? 0,
+    maxDrawdown: maxDrawdown(values),
+    totalReturn: finalState?.profitRate ?? 0,
+  }
+}
 
 describe('统计函数', () => {
   describe('percentile', () => {
@@ -262,6 +289,11 @@ describe('统计函数', () => {
 
         expect(srPositive).toBeGreaterThan(srNegative)
       })
+
+      it('当所有收益都高于无风险收益时应返回 Infinity', () => {
+        const returns = [0.05, 0.06, 0.07]
+        expect(sortinoRatio(returns, 0.01, 1)).toBe(Infinity)
+      })
     })
 
     describe('valueAtRisk', () => {
@@ -303,6 +335,48 @@ describe('统计函数', () => {
         const cvar95 = conditionalVaR(values, 95)
         // 1+2+3+4+5 / 5 = 3
         expect(cvar95).toBeCloseTo(3, 0)
+      })
+
+      it('当尾部样本数量为0时应返回最小值', () => {
+        const values = [10, 20, 30]
+        expect(conditionalVaR(values, 99)).toBe(10)
+      })
+    })
+
+    describe('calculateStatistics', () => {
+      it('空路径应返回全零统计并保留置信区间', () => {
+        const confidenceBands = [
+          {
+            month: 0,
+            median: 100,
+            p5: 80,
+            p25: 90,
+            p75: 110,
+            p95: 120,
+            realMedian: 100,
+            realP5: 80,
+            realP95: 120,
+          },
+        ]
+
+        const stats = calculateStatistics([], confidenceBands, 0.03)
+
+        expect(stats.finalValueMean).toBe(0)
+        expect(stats.returnMean).toBe(0)
+        expect(stats.lossProbability).toBe(0)
+        expect(stats.riskMetrics.maxDrawdownDuration).toBe(0)
+        expect(stats.confidenceBands).toEqual(confidenceBands)
+      })
+
+      it('单路径应返回与路径一致的关键统计值', () => {
+        const path = buildPath([100, 110, 121], 100)
+        const stats = calculateStatistics([path], [], 0.03)
+
+        expect(stats.finalValueMean).toBe(121)
+        expect(stats.finalValueMedian).toBe(121)
+        expect(stats.finalValueMin).toBe(121)
+        expect(stats.finalValueMax).toBe(121)
+        expect(stats.returnMean).toBeCloseTo(0.21, 8)
       })
     })
 
@@ -420,6 +494,17 @@ describe('统计函数', () => {
         expect(metrics.var95).toBeCloseTo(94, 6)
         expect(metrics.var95Percent).toBeCloseTo(0.53, 6)
         expect(metrics.var95Percent).toBeGreaterThanOrEqual(0)
+      })
+
+      it('应正确统计回撤持续期和恢复概率', () => {
+        const recoveredPath = buildPath([100, 120, 90, 130], 100)
+        const unrecoveredPath = buildPath([100, 95, 90, 85], 100)
+
+        const metrics = calculateRiskMetrics([recoveredPath, unrecoveredPath], 0.03)
+
+        expect(metrics.maxDrawdownDuration).toBe(3)
+        expect(metrics.avgDrawdownDuration).toBeCloseTo(2, 8)
+        expect(metrics.recoveryProbability).toBeCloseTo(0.5, 8)
       })
     })
   })

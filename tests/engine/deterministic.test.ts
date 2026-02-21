@@ -83,7 +83,7 @@ describe('确定性计算引擎', () => {
       const result = runDeterministicSimulation(DEFAULT_PARAMS)
 
       // 初始状态（第0月）
-      const initialState = result.path.states[0]
+      const initialState = result.path.states[0]!
       expect(initialState.month).toBe(0)
       expect(initialState.totalAsset).toBe(DEFAULT_PARAMS.initialCapital)
       expect(initialState.equityRatio).toBeCloseTo(DEFAULT_PARAMS.initialEquityRatio, 4)
@@ -100,7 +100,7 @@ describe('确定性计算引擎', () => {
 
     it('累计投资应正确累加', () => {
       const result = runDeterministicSimulation(DEFAULT_PARAMS)
-      const finalState = result.path.states[result.path.states.length - 1]
+      const finalState = result.path.states[result.path.states.length - 1]!
 
       const monthlyInvestment = weeklyToMonthlyInvestment(DEFAULT_PARAMS.weeklyInvestment)
       const expectedCumulative =
@@ -116,7 +116,7 @@ describe('确定性计算引擎', () => {
         rebalancePeriod: 0, // 禁用再平衡
       }
       const result = runDeterministicSimulation(params)
-      const finalState = result.path.states[result.path.states.length - 1]
+      const finalState = result.path.states[result.path.states.length - 1]!
 
       // 计算预期值
       const equityGrowth = Math.pow(1 + annualToMonthlyReturn(params.equityReturn), 12)
@@ -144,11 +144,11 @@ describe('确定性计算引擎', () => {
       const result = runDeterministicSimulation(params)
 
       // 第6月后应该被再平衡
-      const month6State = result.path.states[6]
+      const month6State = result.path.states[6]!
       expect(month6State.equityRatio).toBeCloseTo(0.5, 4)
 
       // 第12月后也应该被再平衡
-      const month12State = result.path.states[12]
+      const month12State = result.path.states[12]!
       expect(month12State.equityRatio).toBeCloseTo(0.5, 4)
     })
   })
@@ -161,7 +161,7 @@ describe('确定性计算引擎', () => {
         inflationRate: 0.025,
       }
       const result = runDeterministicSimulation(params)
-      const finalState = result.path.states[result.path.states.length - 1]
+      const finalState = result.path.states[result.path.states.length - 1]!
 
       // 实际购买力应该小于名义值
       expect(finalState.realTotalAsset).toBeLessThan(finalState.totalAsset)
@@ -176,7 +176,7 @@ describe('确定性计算引擎', () => {
         inflationRate: 0,
       }
       const result = runDeterministicSimulation(params)
-      const finalState = result.path.states[result.path.states.length - 1]
+      const finalState = result.path.states[result.path.states.length - 1]!
 
       expect(finalState.realTotalAsset).toBe(finalState.totalAsset)
       expect(finalState.cumulativeInflation).toBe(0)
@@ -188,7 +188,7 @@ describe('确定性计算引擎', () => {
         inflationRate: 0.03,
       }
       const result = runDeterministicSimulation(params)
-      const initialState = result.path.states[0]
+      const initialState = result.path.states[0]!
 
       expect(initialState.cumulativeInflation).toBe(0)
       expect(initialState.realTotalAsset).toBe(initialState.totalAsset)
@@ -202,8 +202,8 @@ describe('确定性计算引擎', () => {
       }
       const result = runDeterministicSimulation(params)
 
-      const month12 = result.path.states[12]
-      const month24 = result.path.states[24]
+      const month12 = result.path.states[12]!
+      const month24 = result.path.states[24]!
 
       expect(month24.cumulativeInflation).toBeGreaterThan(month12.cumulativeInflation)
     })
@@ -223,8 +223,8 @@ describe('确定性计算引擎', () => {
       const lowResult = runDeterministicSimulation(lowInflationParams)
       const highResult = runDeterministicSimulation(highInflationParams)
 
-      const lowFinal = lowResult.path.states[24]
-      const highFinal = highResult.path.states[24]
+      const lowFinal = lowResult.path.states[24]!
+      const highFinal = highResult.path.states[24]!
 
       // 高通胀时实际购买力占名义值的比例应该更低
       const lowRatio = lowFinal.realTotalAsset / lowFinal.totalAsset

@@ -5,8 +5,14 @@ import type {
   MonteCarloResult,
   ConfidenceBand,
 } from './types'
-import { weeklyToMonthlyInvestment, calculateMaxDrawdown } from './deterministic'
-import { calculateStatistics, annualToMonthlyInflation } from './statistics'
+import { weeklyToMonthlyInvestment } from './deterministic'
+import { calculateStatistics } from './statistics'
+import {
+  buildCumulativeInflationTable,
+  calculateMaxDrawdown,
+  createAssetState,
+  percentileFromSorted,
+} from './simulationShared'
 
 export interface MonteCarloRunOptions {
   onProgress?: (completed: number, total: number) => void
@@ -147,42 +153,6 @@ function simulateSinglePath(
 }
 
 /**
- * 创建资产状态对象
- */
-function createAssetState(
-  month: number,
-  equityAsset: number,
-  bondAsset: number,
-  cumulativeInvestment: number,
-  cumulativeInflation: number,
-  realCumulativeInvestment: number,
-): AssetState {
-  const totalAsset = equityAsset + bondAsset
-  const profit = totalAsset - cumulativeInvestment
-  const profitRate = cumulativeInvestment > 0 ? profit / cumulativeInvestment : 0
-
-  // 使用预计算的通胀值，避免在热路径重复指数运算
-  const realTotalAsset = totalAsset / (1 + cumulativeInflation)
-  const realProfit = realTotalAsset - realCumulativeInvestment
-  const realProfitRate = realCumulativeInvestment > 0 ? realProfit / realCumulativeInvestment : 0
-
-  return {
-    month,
-    equityAsset,
-    bondAsset,
-    totalAsset,
-    equityRatio: totalAsset > 0 ? equityAsset / totalAsset : 0,
-    cumulativeInvestment,
-    profit,
-    profitRate,
-    cumulativeInflation,
-    realTotalAsset,
-    realProfit,
-    realProfitRate,
-  }
-}
-
-/**
  * 执行蒙特卡洛模拟
  */
 export function runMonteCarloSimulation(
@@ -304,43 +274,16 @@ function calculateConfidenceBands(paths: SimulationPath[], months: number): Conf
 
     bands.push({
       month,
-      median: percentile(values, 50),
-      p5: percentile(values, 5),
-      p25: percentile(values, 25),
-      p75: percentile(values, 75),
-      p95: percentile(values, 95),
-      realMedian: percentile(realValues, 50),
-      realP5: percentile(realValues, 5),
-      realP95: percentile(realValues, 95),
+      median: percentileFromSorted(values, 50),
+      p5: percentileFromSorted(values, 5),
+      p25: percentileFromSorted(values, 25),
+      p75: percentileFromSorted(values, 75),
+      p95: percentileFromSorted(values, 95),
+      realMedian: percentileFromSorted(realValues, 50),
+      realP5: percentileFromSorted(realValues, 5),
+      realP95: percentileFromSorted(realValues, 95),
     })
   }
 
   return bands
-}
-
-/**
- * 计算分位数
- */
-function percentile(sortedArr: number[], p: number): number {
-  if (sortedArr.length === 0) return 0
-  const index = (p / 100) * (sortedArr.length - 1)
-  const lower = Math.floor(index)
-  const upper = Math.ceil(index)
-  const lowerVal = sortedArr[lower] ?? 0
-  const upperVal = sortedArr[upper] ?? 0
-  if (lower === upper) return lowerVal
-  return lowerVal * (upper - index) + upperVal * (index - lower)
-}
-
-function buildCumulativeInflationTable(annualInflationRate: number, months: number): number[] {
-  const monthlyInflation = annualToMonthlyInflation(annualInflationRate)
-  const table = Array.from({ length: months + 1 }, () => 0)
-  let inflationFactor = 1
-
-  for (let month = 1; month <= months; month++) {
-    inflationFactor *= 1 + monthlyInflation
-    table[month] = inflationFactor - 1
-  }
-
-  return table
 }
